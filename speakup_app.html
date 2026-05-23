@@ -1,0 +1,1738 @@
+<!doctype html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SpeakUp! English Mastery</title>
+    <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+    <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Fredoka:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * { box-sizing: border-box; }
+        body { font-family: 'Nunito', sans-serif; background: #0f172a; color: white; overflow-x: hidden; }
+        .game-card { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .game-card.unlocked:hover { transform: translateY(-8px); border-color: rgba(245, 158, 11, 0.3); background: rgba(30, 41, 59, 0.9); cursor: pointer; }
+        .glass-card { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
+        .listening-animation { animation: pulse-mic 1.5s infinite; background: #ef4444 !important; }
+        @keyframes pulse-mic {
+            0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { transform: scale(1.15); box-shadow: 0 0 0 20px rgba(239, 68, 68, 0); }
+            100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .slide-in { animation: slideIn 0.4s ease-out forwards; }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .btn-active:active { transform: scale(0.95); }
+    </style>
+</head>
+<body class="h-full">
+    <div id="app" class="min-h-full w-full flex flex-col" style="background: radial-gradient(circle at top right, #1e293b, #0f172a);">
+        <nav class="sticky top-0 z-50 backdrop-blur-md bg-slate-900/80 border-b border-white/10 px-6 py-4">
+            <div class="max-w-6xl mx-auto flex items-center justify-between">
+                <div class="flex items-center gap-3 cursor-pointer" onclick="goHome()">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center shadow-lg">
+                        <i data-lucide="mic-2" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h1 class="text-2xl font-bold tracking-tight text-amber-400" style="font-family: 'Fredoka', sans-serif;">SpeakUp!</h1>
+                </div>
+                
+                <!-- Nav Controls -->
+                <div id="nav-controls" class="hidden flex items-center gap-2 md:gap-4">
+                    <div id="user-profile-display" class="hidden text-sm font-bold text-slate-300 md:block"></div>
+                    
+                    <!-- GLOBAL TIMER -->
+                    <div id="global-timer-display" class="hidden flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-black bg-rose-500/20 border border-rose-500/40 text-rose-400 shadow-sm">
+                        <i data-lucide="timer" class="w-4 h-4"></i> <span id="timer-text">15:00</span>
+                    </div>
+
+                    <button id="home-btn" class="hidden flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-bold bg-white/10 hover:bg-white/20 transition-all btn-active" onclick="goHome()">
+                        <i data-lucide="home" class="w-4 h-4"></i> <span class="hidden sm:inline">Beranda</span>
+                    </button>
+                    <div class="px-3 py-2 rounded-xl bg-emerald-500/20 border border-emerald-500/30 text-emerald-400 font-bold text-sm">
+                        XP: <span id="global-score">0</span>
+                    </div>
+                    <button onclick="triggerLogoutConfirmation()" class="p-2 rounded-xl bg-red-500/10 text-red-400 hover:bg-red-500/20 transition-all" title="Ganti Akun">
+                        <i data-lucide="log-out" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </nav>
+
+        <main id="main-content" class="flex-1 flex flex-col max-w-6xl mx-auto w-full p-4 md:p-8">
+            
+            <!-- VIEW 1: WELCOME / LOGIN -->
+            <div id="view-welcome" class="slide-in flex-1 flex flex-col items-center justify-center py-8">
+                <div class="glass-card max-w-lg w-full p-8 md:p-10 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
+                    <div class="absolute -top-10 -right-10 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                    <div class="absolute -bottom-10 -left-10 w-40 h-40 bg-emerald-500/20 rounded-full blur-3xl pointer-events-none"></div>
+                    
+                    <div class="relative z-10">
+                        <div class="flex justify-center mb-6">
+                            <div class="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500 to-orange-400 flex items-center justify-center shadow-xl">
+                                <i data-lucide="mic-2" class="w-10 h-10 text-white"></i>
+                            </div>
+                        </div>
+                        <h2 class="text-4xl font-black text-white mb-2 text-center" style="font-family: 'Fredoka', sans-serif;">SpeakUp!</h2>
+                        <p class="text-slate-400 text-center mb-8">English Mastery - Curricular Curriculum Edition</p>
+                        
+                        <!-- Rules Box -->
+                        <div class="bg-slate-800/80 rounded-2xl p-5 mb-8 border border-white/10 shadow-inner">
+                            <h3 class="text-amber-400 font-bold mb-3 flex items-center gap-2">
+                                <i data-lucide="gamepad-2" class="w-5 h-5"></i> How to Play:
+                            </h3>
+                            <ul class="text-sm text-slate-300 space-y-2 list-disc list-outside ml-4">
+                                <li>You have exactly <b>15 minutes</b> to complete as many sessions as you can!</li>
+                                <li>Materi otomatis disesuaikan dengan jenjang kelas yang Anda masukkan!</li>
+                                <li>Satu kategori acak kelas Anda akan terbuka di awal. Jika masuk kembali dengan nama yang sama, progress Anda akan dilanjutkan!</li>
+                                <li><b>Multi-Step Practice:</b> Listen & repeat the Vocabulary first, then listen & repeat the Sentence!</li>
+                                <li><b>Rekap otomatis:</b> Data nilai Anda akan dikirim ke guru di akhir menit ke-15!</li>
+                            </ul>
+                        </div>
+
+                        <!-- Form -->
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-bold text-slate-400 mb-1 ml-1">Nama Lengkap</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i data-lucide="user" class="w-5 h-5 text-slate-500"></i>
+                                    </div>
+                                    <input type="text" id="input-nama" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600 font-semibold" placeholder="Masukkan namamu...">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-bold text-slate-400 mb-1 ml-1">Kelas</label>
+                                <div class="relative">
+                                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <i data-lucide="graduation-cap" class="w-5 h-5 text-slate-500"></i>
+                                    </div>
+                                    <input type="text" id="input-kelas" class="w-full bg-slate-900/50 border border-slate-700 rounded-xl pl-12 pr-4 py-4 text-white focus:outline-none focus:border-amber-500 focus:ring-1 focus:ring-amber-500 transition-all placeholder:text-slate-600 font-semibold" placeholder="Contoh: 10 IPA 1, XI IPS, atau 12">
+                                </div>
+                            </div>
+                            <button onclick="loginUser()" class="w-full py-4 mt-6 bg-amber-500 hover:bg-amber-400 text-white font-black text-lg rounded-xl shadow-lg transition-all btn-active flex items-center justify-center gap-2">
+                                Mulai Pemanasan (15 Menit) <i data-lucide="arrow-right" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 2: HOME (CATEGORIES) -->
+            <div id="view-home" class="hidden space-y-12 slide-in pb-12">
+                <div class="text-center max-w-2xl mx-auto py-8">
+                    <h2 class="text-4xl md:text-5xl font-black mb-4 text-white" id="home-grade-title">Pilih Kategori</h2>
+                    <p class="text-slate-400 text-lg">Selesaikan kategori aktif Anda untuk membuka kategori baru dalam kelas yang sama!</p>
+                </div>
+                <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4"></div>
+            </div>
+
+            <!-- VIEW 3: VOCABULARY LIST -->
+            <div id="view-vocab-list" class="hidden slide-in max-w-5xl mx-auto pb-12">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+                    <div>
+                        <h2 class="text-3xl font-black text-white" id="list-topic-title">Vocabulary</h2>
+                        <p class="text-slate-400">Pelajari 10 kosakata ini sebelum mulai praktik.</p>
+                    </div>
+                    <button onclick="startSpeakingSession()" class="px-8 py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-2xl transition-all btn-active shadow-lg flex items-center gap-2">
+                        Mulai Praktik <i data-lucide="mic" class="w-5 h-5"></i>
+                    </button>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="vocab-items-container"></div>
+            </div>
+
+            <!-- VIEW 4: GAME SESSION -->
+            <div id="view-game" class="hidden slide-in">
+                <div class="max-w-3xl mx-auto glass-card rounded-[2.5rem] overflow-hidden shadow-2xl relative">
+                    <div class="w-full bg-white/5 h-2">
+                        <div id="progress-bar" class="h-full bg-amber-500 transition-all duration-500" style="width: 0%"></div>
+                    </div>
+                    <div class="p-8 md:p-12 text-center flex flex-col items-center min-h-[460px]">
+                        <div id="game-step-indicator" class="text-amber-500 font-bold uppercase text-sm tracking-widest mb-2">Langkah 1: Dengarkan Vocab</div>
+                        <h3 id="round-indicator" class="text-slate-500 text-xs font-bold mb-6 uppercase">Item 1 of 10</h3>
+                        
+                        <!-- Main Content Display -->
+                        <div id="target-display" class="mb-8 w-full flex flex-col items-center justify-center min-h-[140px]"></div>
+                        
+                        <!-- Control Area (Mic/Text Input) -->
+                        <div id="mic-control-area" class="w-full flex flex-col items-center gap-4 mt-auto"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW 5: RESULTS -->
+            <div id="view-results" class="hidden text-center py-12 slide-in">
+                <div class="max-w-md mx-auto glass-card p-12 rounded-[3rem] shadow-2xl">
+                    <div id="result-icon-container" class="w-24 h-24 bg-rose-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl">
+                        <i id="result-icon" data-lucide="clock" class="w-12 h-12 text-white"></i>
+                    </div>
+                    <h2 id="result-title" class="text-4xl font-black text-white mb-2">Pemanasan Selesai!</h2>
+                    <p class="text-slate-400 mb-6" id="result-user-info"></p>
+                    <div class="bg-white/5 rounded-2xl p-6 mb-8 mt-4 border border-white/10">
+                        <div id="final-session-score" class="text-6xl font-black text-amber-400">100</div>
+                        <div id="xp-label-text" class="text-xs font-bold text-slate-500 uppercase mt-2">TOTAL XP YANG DIKUMPULKAN</div>
+                    </div>
+                    <div id="result-actions" class="space-y-3">
+                        <!-- Navigation buttons will be injected here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- CUSTOM CONFIRMATION MODAL -->
+            <div id="custom-confirm-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+                <div class="glass-card max-w-md w-full p-8 rounded-3xl shadow-2xl text-center slide-in">
+                    <div class="w-16 h-16 bg-red-500/20 text-red-400 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="alert-triangle" class="w-8 h-8"></i>
+                    </div>
+                    <h3 class="text-2xl font-black text-white mb-2">Ganti Akun?</h3>
+                    <p class="text-slate-400 text-sm mb-8">Data XP Anda saat ini akan di-reset untuk siswa berikutnya.</p>
+                    <div class="flex gap-4">
+                        <button onclick="closeConfirmModal()" class="flex-1 py-3 bg-white/10 hover:bg-white/20 text-white font-bold rounded-xl transition-all">Batal</button>
+                        <button onclick="confirmLogout()" class="flex-1 py-3 bg-red-500 hover:bg-red-400 text-white font-bold rounded-xl transition-all">Ya, Ganti Akun</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Global Toast Notification -->
+            <div id="feedback-toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full font-bold text-white shadow-2xl opacity-0 transition-all duration-300 pointer-events-none z-50"></div>
+
+        </main>
+    </div>
+
+    <script>
+        // Helper to safely parse JSON from localStorage
+        function getStoredArray(key, defaultArray) {
+            try {
+                const item = localStorage.getItem(key);
+                return item ? JSON.parse(item) : defaultArray;
+            } catch (e) {
+                return defaultArray;
+            }
+        }
+
+        const state = {
+            totalXP: parseInt(localStorage.getItem('speakup_xp')) || 0,
+            userName: localStorage.getItem('speakup_name') || '',
+            userClass: localStorage.getItem('speakup_class') || '',
+            unlockedCategoryIds: getStoredArray('speakup_unlocked_ids', []),
+            completedCategories: getStoredArray('speakup_completed', []),
+            currentGameIndex: null,
+            currentGame: null,
+            rounds: [],
+            roundIndex: 0,
+            step: 'listenVocab', // listenVocab -> speakVocab -> listenSentence -> speakSentence
+            isListening: false,
+            britishVoice: null,
+            sessionScore: 0,
+            currentTarget: "",
+            timerInterval: null,
+            isManualMode: localStorage.getItem('speakup_manual_mode') === 'true' || false,
+            completedList: getStoredArray('speakup_session_completed_titles', []) // Menyimpan daftar kategori yang diselesaikan di sesi ini
+        };
+
+        const categories = [
+            { id: 'unit1', title: 'Unit 1: Sports Events (Class X Ch 1)', icon: 'activity', color: 'bg-orange-600' },
+            { id: 'unit2', title: 'Unit 2: Sports Athletes (Class X Ch 2)', icon: 'trophy', color: 'bg-indigo-600' },
+            { id: 'unit3', title: 'Unit 3: Healthy Food (Class X Ch 3)', icon: 'heart', color: 'bg-emerald-600' },
+            { id: 'unit4', title: 'Unit 4: Smarter Eating (Class X Ch 4)', icon: 'apple', color: 'bg-green-600' },
+            { id: 'unit5', title: 'Unit 5: Graffiti (Class X Ch 5)', icon: 'palette', color: 'bg-pink-600' },
+            { id: 'unit6', title: 'Unit 6: Fractured Stories (Class X Ch 6)', icon: 'book-open', color: 'bg-cyan-600' },
+            { id: 'unit7', title: 'Unit 7: Digital Literacy (Class XI Unit 1)', icon: 'smartphone', color: 'bg-rose-600' },
+            { id: 'unit8', title: 'Unit 8: Environment (Class XI Unit 2)', icon: 'globe', color: 'bg-teal-600' },
+            { id: 'unit9', title: 'Unit 9: Healthy Future (Class XI Unit 3)', icon: 'smile', color: 'bg-violet-600' },
+            { id: 'unit10', title: 'Unit 10: Environmental Awareness (Class XI Unit 4)', icon: 'leaf', color: 'bg-amber-600' },
+            { id: 'unit11', title: 'Unit 11: Financial Literacy (Class XI Unit 5)', icon: 'landmark', color: 'bg-yellow-600' },
+            { id: 'unit12', title: 'Unit 12: Social Media (Class XII Unit 1)', icon: 'instagram', color: 'bg-fuchsia-600' },
+            { id: 'unit13', title: 'Unit 13: Clean Energy (Class XII Unit 2)', icon: 'zap', color: 'bg-sky-600' },
+            { id: 'unit14', title: 'Unit 14: Cashless Society (Class XII Unit 3)', icon: 'wallet', color: 'bg-emerald-500' },
+            { id: 'unit15', title: 'Unit 15: Future Careers (Class XII Unit 4)', icon: 'briefcase', color: 'bg-red-500' }
+        ];
+
+        // Strict Compound Sentences for all 15 Units (50 Items each!)
+        const rawData = {
+            unit1: `Determination|Tekad|Ronaldo was poor in his childhood, but his strong determination paved his way to glory.|Ronaldo miskin di masa kecilnya, tetapi tekadnya yang kuat membuka jalannya menuju kejayaan.
+Spectator|Penonton|The stadium was packed with excited spectators, and the crowd cheered loudly.|Stadion dipenuhi penonton yang gembira, dan kerumunan orang bersorak dengan keras.
+Perseverance|Ketekunan|Athletes must practice daily, so they need perseverance to achieve success.|Atlet harus berlatih setiap hari, jadi mereka butuh ketekunan untuk meraih sukses.
+Championship|Kejuaraan|The national team must win the match, or they will lose the world championship.|Tim nasional harus memenangkan pertandingan, atau mereka akan kehilangan kejuaraan dunia.
+Tournament|Turnamen|The school held a sports tournament, and many students joined to compete.|Sekolah mengadakan turnamen olahraga, dan banyak siswa ikut bersaing.
+Athlete|Atlet|She had a painful ankle injury, but the brave athlete still won the gold medal.|Dia mengalami cedera pergelangan kaki yang menyakitkan, tetapi atlet pemberani itu tetap memenangkan medali emas.
+Opponent|Lawan|His opponent was very tall, so he changed his strategy before the match.|Lawannya sangat tinggi, jadi dia mengubah strateginya sebelum pertandingan.
+Referee|Wasit|The referee made a final decision, and all players respected it immediately.|Wasit membuat keputusan akhir, dan semua pemain langsung menghormatinya.
+Victory|Kemenangan|The match was very hard, but our team celebrated the final victory.|Pertandingan sangat berat, tetapi tim kami merayakan kemenangan akhir.
+Defeat|Kekalahan|The runner was sad about her defeat, yet she promised to train much harder.|Pelari itu sedih atas kekalahannya, namun ia berjanji untuk berlatih jauh lebih keras.
+Audience|Hadirin|The lights inside the hall dimmed, and the audience stopped talking.|Lampu di dalam aula meredup, dan para hadirin berhenti berbicara.
+Medal|Medali|He came in first place, so he received a bright gold medal.|Dia berada di posisi pertama, jadi dia menerima medali emas yang berkilau.
+Support|Dukungan|The team lost the match, yet their fans gave them great support.|Tim kalah dalam pertandingan, namun penggemar mereka memberi dukungan besar.
+Trophy|Piala|The team won the championship, and they lifted the gold trophy.|Tim memenangkan kejuaraan, dan mereka mengangkat piala emas.
+Score|Skor|The game was very tight, so the final score was a draw.|Pertandingan sangat ketat, sehingga skor akhirnya adalah seri.
+Coach|Pelatih|The coach made a great strategy, and the team executed it well.|Pelatih membuat strategi hebat, dan tim melaksanakannya dengan baik.
+Train|Berlatih|The runner wanted to win, so she trained every single morning.|Pelari itu ingin menang, jadi dia berlatih setiap pagi.
+Stamina|Stamina|He swam for two hours, yet his high stamina kept him active.|Dia berenang selama dua jam, namun staminanya yang tinggi membuatnya tetap aktif.
+Gym|Gimnasium|You can exercise at home, or you can join the new local gym.|Kamu bisa berolahraga di rumah, atau kamu bisa bergabung dengan gym lokal yang baru.
+Jersey|Jersey|The players put on their jerseys, and they ran onto the green field.|Para pemain mengenakan jersey mereka, dan mereka berlari ke lapangan hijau.
+Strategy|Strategi|They practiced the defense strategy, but the opponents still scored.|Mereka melatih strategi pertahanan, tetapi lawan tetap mencetak gol.
+Goal|Gol|The striker kicked the ball, and he scored an amazing goal.|Penyerang menendang bola, dan dia mencetak gol yang luar biasa.
+Match|Pertandingan|The weather was extremely rainy, so the football match was postponed.|Cuaca sangat hujan, sehingga pertandingan sepak bola ditunda.
+Captain|Kapten|The captain led the team, and he motivated everyone before the match.|Kapten memimpin tim, dan dia memotivasi semua orang sebelum pertandingan.
+Champion|Juara|Our school team trained hard, so they became the regional champion.|Tim sekolah kami berlatih keras, sehingga mereka menjadi juara regional.
+Support|Mendukung|Parents came to the field, for they wanted to support their kids.|Orang tua datang ke lapangan, karena mereka ingin mendukung anak-anak mereka.
+Rules|Aturan|We must follow the game rules, or the referee will penalize us.|Kita harus mengikuti aturan permainan, atau wasit akan menghukum kita.
+Injury|Cedera|The player suffered a leg injury, yet he refused to leave the field.|Pemain mengalami cedera kaki, namun ia menolak untuk meninggalkan lapangan.
+Warm up|Pemanasan|You must warm up first, or you will get muscle cramps.|Kamu harus melakukan pemanasan terlebih dahulu, atau kamu akan mengalami kram otot.
+Run|Berlari|She wanted to reach the finish line, so she ran as fast as possible.|Dia ingin mencapai garis finish, jadi dia berlari secepat mungkin.
+Teamwork|Kerja Tim|We do not play individually, for great teamwork wins the game.|Kita tidak bermain secara individu, karena kerja tim yang hebat memenangkan pertandingan.
+Bicycle|Sepeda|He repaired his old bicycle, so he can ride it to school tomorrow.|Dia memperbaiki sepeda lamanya, jadi dia bisa mengendarainya ke sekolah besok.
+Runner|Pelari|The young runner started the race, and she took the lead quickly.|Pelari muda itu memulai perlombaan, dan dia memimpin dengan cepat.
+Leaderboard|Papan Skor|My name was at the top of the leaderboard, and I felt very proud.|Nama saya berada di puncak papan skor, dan saya merasa sangat bangga.
+Praise|Pujian|The crowd gave a loud cheer, for the athlete performed beautifully.|Kerumunan memberikan sorakan keras, karena atlet itu tampil dengan indah.
+Practice|Latihan|The rain was very heavy, yet the players continued their football practice.|Hujan sangat deras, namun para pemain melanjutkan latihan sepak bola mereka.
+Field|Lapangan|The grass was wet, so they did not play on the open field.|Rumputnya basah, jadi mereka tidak bermain di lapangan terbuka.
+Event|Acara|The school organized a sports event, and many parents attended.|Sekolah menyelenggarakan acara olahraga, dan banyak orang tua hadir.
+Sporty|Sportif|They lost the match, yet they maintained a friendly sporty attitude.|Mereka kalah dalam pertandingan, namun mereka mempertahankan sikap sportif yang ramah.
+Effort|Upaya|She did not win the prize, but she made a wonderful sporting effort.|Dia tidak memenangkan hadiah, tetapi dia melakukan upaya sportif yang luar biasa.
+Skill|Keterampilan|He practiced dribbling daily, so his basketball skill improved.|Dia berlatih menggiring bola setiap hari, jadi keterampilan basketnya meningkat.
+Uniform|Seragam|The team received new uniforms, and they looked very professional.|Tim menerima seragam baru, dan mereka terlihat sangat profesional.
+Pitch|Lapangan Bola|The players entered the pitch, and the spectators started cheering.|Para pemain memasuki lapangan, dan para penonton mulai bersorak.
+Courage|Keberanian|The opponent was very strong, yet our team showed great courage.|Lawannya sangat kuat, namun tim kami menunjukkan keberanian yang besar.
+Track|Lintasan|The runners lined up on the track, and the race started.|Para pelari berbaris di lintasan, dan perlombaan pun dimulai.
+Leap|Melompat|He ran toward the bar, and he made a spectacular high leap.|Dia berlari menuju palang, dan dia melakukan lompatan tinggi yang spektakuler.
+Record|Rekor|The swimmer swam incredibly fast, so she broke the national record.|Perenang itu berenang dengan sangat cepat, sehingga dia memecahkan rekor nasional.
+Fitness|Kebugaran|Regular exercise is good, for it improves your physical fitness.|Olahraga teratur itu baik, karena meningkatkan kebugaran fisikmu.
+Whistle|Peluit|The referee blew the metal whistle, and the match ended.|Wasit mniup peluit logam, dan pertandingan pun berakhir.
+Trophy|Piala|They worked hard together, so they proudly raised the golden trophy.|Mereka bekerja keras bersama, jadi mereka dengan bangga mengangkat piala emas.`,
+
+            unit2: `Legend|Legenda|He is a legendary swimmer, and local children love his inspiring story.|Dia perenang legendaris, dan anak-anak setempat menyukai ceritanya yang inspiratif.
+Gold Medal|Medali Emas|She performed her routine perfectly, so she won a gold medal.|Dia melakukan rutinitasnya dengan sempurna, sehingga dia memenangkan medali emas.
+Gymnastics|Senam|He loves playing basketball, but his sister prefers gymnastics.|Dia suka bermain basket, tetapi saudaranya lebih memilih senam.
+Marathon|Maraton|She trained for months, so she finished the marathon easily.|Dia berlatih berbulan-bulan, sehingga dia menyelesaikan maraton dengan mudah.
+Teammate|Teman Satu Tim|The captain called his teammates, and they entered the field together.|Kapten memanggil rekan satu timnya, dan mereka memasuki lapangan bersama.
+Record|Rekor|He lifted the heavy bar, so he broke the national record.|Dia mengangkat bar yang berat, sehingga dia memecahkan rekor nasional.
+Trophy|Piala|The team won the final game, and they raised the gold trophy.|Tim memenangkan pertandingan final, dan mereka mengangkat piala emas.
+Stadium|Stadion|The old stadium was repaired, and it is now very modern.|Stadion lama diperbaiki, dan sekarang sangat modern.
+Coach|Pelatih|The coach gave a tactical plan, but the team still lost.|Pelatih memberikan rencana taktis, tetapi tim tetap kalah.
+Sporting|Sportif|The players shook hands, for they wanted to show a sporting spirit.|Para pemain berjabat tangan, karena mereka ingin menunjukkan sikap sportif.
+Champion|Juara|He trained under a hard regime, so he became the national champion.|Dia berlatih di bawah rezim yang keras, sehingga ia menjadi juara nasional.
+Runner|Pelari|The runner was tired, yet she kept running to the finish line.|Pelari itu lelah, namun dia terus berlari ke garis finish.
+Dribble|Menggiring|The player dribbled the ball, and he passed the defender easily.|Pemain itu menggiring bola, dan dia melewati bek dengan mudah.
+Score|Skor|He kicked the ball hard, so he scored the winning goal.|Dimia menendang bola dengan keras, sehingga dia mencetak gol kemenangan.
+Warm up|Pemanasan|We must warm up now, or we will hurt our leg muscles.|Kita harus melakukan pemanasan sekarang, atau kita akan melukai otot kaki kita.
+Jersey|Jersey|She bought a red jersey, and she wore it to the match.|Dia membeli jersey merah, dan dia memakainya ke pertandingan.
+Gym|Gimnasium|The gym was closed today, so they exercised in the park.|Gimnasium ditutup hari ini, jadi mereka berolahraga di taman.
+Support|Dukungan|The fans showed great support, and the players felt motivated.|Para penggemar menunjukkan dukungan besar, dan para pemain merasa termotivasi.
+Referee|Wasit|The referee blew his whistle, so the game stopped.|Wasit meniup peluitnya, jadi pertandingan berhenti.
+Spectator|Penonton|The spectators stood up, and they clapped for the winner.|Para penonton berdiri, dan mereka bertepuk tangan untuk pemenang.
+Determination|Tekad|The match was difficult, yet their determination led them to win.|Pertandingan itu sulit, namun tekad mereka membawa mereka pada kemenangan.
+Perseverance|Ketekunan|Success takes time, so you need perseverance to achieve your goals.|Kesuksesan butuh waktu, jadi kamu butuh ketekunan untuk mencapai tujuanmu.
+Championship|Kejuaraan|They lost the local match, yet they qualified for the championship.|Mereka kalah dalam pertandingan lokal, namun mereka lolos ke kejuaraan.
+Tournament|Turnamen|We entered the regional tournament, but we did not win any medals.|Kami mengikuti turnamen regional, tetapi kami tidak memenangkan medali apa pun.
+Athlete|Atlet|The athlete prepared her gear, and she went to the track.|Atlet itu menyiapkan peralatannya, dan dia pergi to lintasan.
+Opponent|Lawan|The opponent played very aggressively, yet our team remained calm.|Lawan bermain sangat agresif, namun tim kami tetap tenang.
+Victory|Kemenangan|The battle was intense, but they celebrated a great victory.|Pertempuran itu sengit, tetapi mereka merayakan kemenangan besar.
+Defeat|Kekalahan|They accepted their defeat, so they started to train harder.|Mereka menerima kekalahan mereka, jadi mereka mulai berlatih lebih keras.
+Audience|Hadirin|The hall was completely full, and the audience was silent.|Aula itu sepenuhnya penuh, dan para hadirin terdiam.
+Medal|Medali|He won the race, so he received a silver medal.|Dia memenangkan perlombaan, jadi dia menerima medali perak.
+Support|Mendukung|We must support our local team, for they represent our town.|Kita harus mendukung tim lokal kita, karena mereka mewakili kota kita.
+Rules|Aturan|Do not break the rules, or you will be disqualified.|Jangan melanggar aturan, atau kamu akan didiskualifikasi.
+Injury|Cedera|He suffered an injury, but he still completed the marathon.|Dia mengalami cedera, tetapi dia tetap menyelesaikan maraton.
+Fitness|Kebugaran|She eats healthy food, and she exercises to maintain her fitness.|Dia makan makanan sehat, dan dia berolahraga untuk menjaga kebugarannya.
+Teammate|Rekan tim|He supported his teammate, so they won the doubles match.|Dia mendukung rekan timnya, jadi mereka memenangkan pertandingan ganda.
+Scoreboard|Papan skor|I looked at the scoreboard, and our team was leading.|Saya melihat ke papan skor, dan tim kami sedang memimpin.
+Whistle|Peluit|The game ended, for the referee blew the final whistle.|Permainan berakhir, karena wasit meniup peluit akhir.
+Uniform|Seragam|The players wore their uniforms, and they looked very neat.|Para pemain mengenakan seragam mereka, dan mereka terlihat sangat rapi.
+Sporty|Sportif|They played a sporty game, and they made many new friends.|Mereka memainkan permainan yang sportif, dan mereka mendapatkan banyak teman baru.
+Effort|Upaya|It was a great effort, so the coach praised the whole team.|Itu adalah upaya yang hebat, jadi pelatih memuji seluruh tim.
+Practice|Latihan|We had a long practice, but we did not feel tired.|Kami menjalani latihan yang lama, tetapi kami tidak merasa lelah.
+Field|Lapangan|The field was muddy, so the players ran very carefully.|Lapangannya berlumpur, jadi para pemain berlari dengan sangat hati-hati.
+Event|Acara|The sports event was successful, and everyone was happy.|Acara olahraga itu sukses, dan semua orang senang.
+Jersey|Kaos tim|He washed his jersey, for it was dirty after the match.|Dia mencuci kaos timnya, karena kotor setelah pertandingan.
+Rules|Regulasi|The rules are strict, so you must read them carefully.|Aturannya ketat, jadi kamu harus membacanya dengan cermat.
+Opponent|Lawan main|His opponent shook his hand, and they smiled at each other.|Lawan mainnya menjabat tangannya, dan mereka saling tersenyum.
+Courage|Keberanian|The team showed courage, and they won the difficult match.|Tim menunjukkan keberanian, dan mereka memenangkan pertandingan yang sulit.
+Leap|Lompatan|She made a high leap, so she won the jumping contest.|Dia melakukan lompatan tinggi, sehingga dia memenangkan kontes melompat.
+Praise|Pujian|The crowd gave loud praise, for the player did a great job.|Penonton memberikan pujian yang keras, karena pemain melakukan tugasnya dengan baik.
+Trophy|Piala|They lifted the trophy, and they celebrated their success.|Mereka mengangkat piala, dan mereka merayakan kesuksesan mereka.`,
+
+            unit3: `Nutritious|Bergizi|Eat fresh organic vegetables, for they are nutritious and healthy.|Makanlah sayuran organik segar, karena makanan itu bergizi dan sehat.
+Metabolism|Metabolisme|Drink water in the morning, and it will speed up your metabolism.|Minumlah air di pagi hari, dan itu akan mempercepat metabolismemu.
+Calorie|Calorie|Fast food is delicious, but it contains too many calories.|Makanan cepat saji itu lezat, tetapi mengandung terlalu banyak kalori.
+Fiber|Serat|Apples have natural fiber, so they are good for your diet.|Apel memiliki serat alami, jadi mereka baik untuk dietmu.
+Cholesterol|Kolesterol|Avoid oily fried foods, or your blood cholesterol will rise.|Hindari gorengan berminyak, atau kolesterol darahmu akan naik.
+Hydration|Hidrasi|We need water, so keep proper hydration during outdoor sports.|Kita butuh air, jadi jaga hidrasi yang tepat selama berolahraga.
+Preservative|Bahan Pengawet|Processed food has preservatives, so we should eat fresh meals.|Makanan olahan memiliki pengawet, jadi kita harus makan makanan segar.
+Organic|Organik|Organic foods are expensive, yet they are much safer for us.|Makanan organik itu mahal, namun mereka jauh lebih aman untuk kita.
+Digestive|Pencernaan|Do not eat before bed, or it will disrupt your digestive system.|Jangan makan sebelum tidur, atau itu akan mengganggu sistem pencernaanmu.
+Antioxidant|Antioksidan|Green tea has natural antioxidants, so drinking it protects your body.|Teh hijau memiliki antioksidan alami, jadi meminumnya melindungi tubuhmu.
+Nutrition|Nutrisi|She studies human nutrition, and she writes books about health.|Dia mempelajari nutrisi manusia, dan dia menulis buku tentang kesehatan.
+Vitamin|Vitamin|Citrus fruits contain vitamins, so they are good for you.|Buah sitrus mengandung vitamin, jadi mereka baik untukmu.
+Mineral|Mineral|Vegetables contain minerals, and they keep your bones strong.|Sayuran mengandung mineral, dan mereka menjaga tulangmu tetap kuat.
+Protein|Protein|Fish has high protein, so athletes eat it daily for muscles.|Ikan memiliki protein tinggi, jadi atlet memakannya setiap hari untuk otot.
+Vegetable|Sayur|He bought fresh vegetables, and he made a healthy salad.|Dia membeli sayur-sayuran segar, dan dia membuat salad yang sehat.
+Fruit|Buah|She loves eating sweet fruits, but she dislikes sour lemons.|Dia suka makan buah-buahan manis, tetapi dia tidak menyukai lemon yang asam.
+Diet|Diet|He followed a strict diet, so he lost weight quickly.|Dia menjalani diet ketat, sehingga berat badannya turun dengan cepat.
+Water|Air|We must drink clean water, or we will face dehydration.|Kita harus minum air bersih, atau kita akan menghadapi dehidrasi.
+Juice|Jus|She squeezed fresh oranges, and she made a cold sweet juice.|Dia memeras jeruk segar, dan dia membuat jus manis yang dingin.
+Sugar|Gula|This cake has too much sugar, so I will not eat it.|Kue ini memiliki terlalu banyak gula, jadi saya tidak akan memakannya.
+Salt|Garam|Do not add too much salt, or the soup will taste bad.|Jangan menambahkan terlalu banyak garam, atau supnya akan terasa tidak enak.
+Fat|Lemak|Avocados have healthy fats, but fried foods have bad fats.|Alpukat memiliki lemak sehat, tetapi gorengan memiliki lemak jahat.
+Carbohydrate|Karbohidrat|Rice provides carbohydrates, and it gives us daily energy.|Nasi menyediakan karbohidrat, dan itu memberi kita energi harian.
+Calcium|Kalsium|Milk is rich in calcium, so it makes your teeth strong.|Susu kaya akan kalsium, jadi itu membuat gigimu kuat.
+Iron|Zat besi|Spinach contains natural iron, and it is very good for your blood.|Bayam mengandung zat besi alami, dan itu sangat baik untuk darahmu.
+Healthy|Sehat|They cook healthy meals, for they want to live a long life.|Mereka memasak makanan sehat, karena mereka ingin hidup lama.
+Snack|Camilan|You can eat fresh fruits as a snack, or you can have nuts.|Kamu bisa makan buah segar sebagai camilan, atau kamu bisa makan kacang.
+Meal|Makanan|She prepared a delicious meal, and the family ate together.|Dia menyiapkan makanan yang lezat, dan keluarga makan bersama.
+Fresh|Segar|The fish was very fresh, so the yellow soup tasted amazing.|Ikannya sangat segar, sehingga sup kuningnya terasa luar biasa.
+Breakfast|Sarapan|They had warm porridge for breakfast, and they drank sweet tea.|Mereka makan bubur hangat untuk sarapan, and mereka minum teh manis.
+Lunch|Makan siang|We had grilled fish for lunch, but we had rice for dinner.|Kami makan ikan bakar untuk makan siang, tetapi kami makan nasi untuk makan malam.
+Dinner|Makan malam|She cooked chicken for dinner, and everyone enjoyed it.|Dia memasak ayam untuk makan malam, dan semua orang menikmatinya.
+Cook|Memasak|My father loves to cook, but my mother prefers baking cakes.|Ayah saya suka memasak, tetapi ibu saya lebih suka memanggang kue.
+Bake|Memanggang|She baked sweet bread, and the kitchen smelled very fragrant.|Dia memanggang roti manis, dan dapurnya berbau sangat harum.
+Boil|Merebus|Boil the water first, or the tea will not brew well.|Rebus airnya terlebih dahulu, atau tehnya tidak akan menyeduh dengan baik.
+Sauté|Menumis|Sauté the onions, and add the chopped chicken into the pan.|Tumis bawang merah, dan masukkan cincangan ayam ke dalam wajan.
+Recipe|Resep|This is a traditional recipe, but we modified it slightly.|Ini adalah resep tradisional, tetapi kami mengubahnya sedikit.
+Ingredient|Bahan|We need fresh ingredients, so we went to the local market.|Kita butuh bahan-bahan segar, jadi kita pergi to pasar lokal.
+Portion|Porsi|The food portion was small, yet it was very filling and tasty.|Porsi makanan itu kecil, namun sangat mengenyangkan dan lezat.
+Unhealthy|Tidak Sehat|He stopped eating unhealthy snacks, so his health improved.|Dia berhenti makan camilan tidak sehat, jadi kesehetannya membaik.
+Calorie|Kalori|Track your daily calories, or you will gain weight easily.|Pantau kalori harianmu, atau berat badanmu akan naik dengan mudah.
+Energy|Energi|Bananas give quick energy, so tennis players eat them during breaks.|Pisang memberikan energi cepat, jadi pemain tenis memakannya saat istahat.
+Nutrient|Nutrisi|Organic soil has rich nutrients, so the plants grow fast.|Tanah organik memiliki nutrisi yang kaya, sehingga tanaman tumbuh cepat.
+Supplement|Suplemen|He takes vitamin supplements, for he wants to stay active.|Dia meminum suplemen vitamin, karena ia ingin tetap aktif.
+Porridge|Bubur|The porridge was hot, so she waited for it to cool down.|Buburnya panas, jadi dia menunggu sampai dingin.
+Honey|Madu|Add some sweet honey, or use organic sugar for the tea.|Tambahkan madu manis, atau gunakan gula organik untuk tehnya.
+Ginger|Jahe|She made warm ginger tea, and it made her throat feel better.|Dia membuat teh jahe hangat, dan itu membuat tenggorokannya terasa lebih baik.
+Garlic|Bawang putih|Sauté the garlic, and add the fresh fish into the pot.|Tumis bawang putih, dan masukkan ikan segar ke dalam panci.
+Onion|Bawang merah|Slice the onions carefully, or they will make you cry.|Iris bawang merah dengan hati-hati, atau mereka akan membuatmu menangis.
+Spicy|Pedas|The yellow soup was not spicy, but the green sambal was very hot.|Sup kuningnya tidak pedas, tetapi sambal hijaunya sangat pedas.`,
+
+            unit4: `Vitamin|Vitamin|Citrus fruits have vitamin C, and they protect you from cold.|Buah sitrus memiliki vitamin C, dan mereka melindungimu dari flu.
+Protein|Protein|Eggs contain rich protein, so athletes eat them for muscles.|Telur mengandung protein yang kaya, jadi atlet memakannya untuk otot.
+Diet|Diet|The doctor ordered a low sugar diet, but he kept drinking sweet tea.|Dokter menyarankan diet rendah gula, tetapi dia tetap minum teh manis.
+Mineral|Mineral|Sea fish has healthy minerals, and it is good for your brain.|Ikan laut memiliki mineral sehat, dan itu baik untuk otakmu.
+Saturated|Jenuh|Butter has saturated fat, so you should limit its usage.|Mentega memiliki lemak jenuh, jadi kamu harus membatasi penggunaannya.
+Supplement|Suplemen|He wants strong bones, so he takes calcium supplements daily.|Dia ingin tulang yang kuat, jadi dia minum suplemen kalsium setiap hari.
+Recipe|Resep|She wrote a secret recipe, and she gave it to her mother.|Dia menulis resep rahasia, dan dia memberikannya kepada ibunya.
+Ingredient|Bahan|We bought fresh ingredients, so we can cook the soup now.|Kami membeli bahan-bahan segar, jadi kita bisa memasak sup sekarang.
+Portion|Porsi|The food portion was large, but he managed to finish it.|Porsi makanan itu besar, tetapi dia berhasil menghabiskannya.
+Unhealthy|Tidak Sehat|Avoid unhealthy snacks, or you will get a stomach ache.|Hindari camilan tidak sehat, atau kamu akan sakit perut.
+Carbohydrate|Karbohidrat|Bread provides carbohydrates, and it gives us energy for sports.|Roti menyediakan karbohidrat, dan itu memberi kita energi untuk olahraga.
+Calcium|Kalsium|Yogurt is rich in calcium, so it makes your bones strong.|Yogurt kaya akan kalsium, jadi itu membuat tulangmu kuat.
+Iron|Zat besi|Meat contains natural iron, and it is very good for your blood.|Daging mengandung zat besi alami, dan itu sangat baik untuk darahmu.
+Healthy|Sehat|They prepared healthy meals, for they wanted to live a long life.|Mereka menyiapkan makanan sehat, karena mereka ingin hidup lama.
+Snack|Camilan|You can have fresh fruits as a snack, or you can eat nuts.|Kamu bisa makan buah segar sebagai camilan, atau kamu bisa makan kacang.
+Meal|Makanan|My sister prepared a meal, and we ate together at the table.|Kakak saya menyiapkan makanan, dan kami makan bersama di meja.
+Fresh|Segar|The apples were very fresh, so they tasted sweet and juicy.|Apel-apel itu sangat segar, sehingga rasanya manis dan berair.
+Breakfast|Sarapan|We had warm bread for breakfast, and we drank fresh milk.|Kami makan roti hangat untuk sarapan, dan kami minum susu segar.
+Lunch|Makan siang|He ate grilled fish for lunch, but he had noodles for dinner.|Dia makan ikan bakar untuk makan siang, tetapi dia makan mie untuk makan malam.
+Dinner|Makan malam|My mother cooked soup for dinner, and everyone enjoyed it.|Ibu saya memasak sup untuk makan malam, dan semua orang menikmatinya.
+Cook|Memasak|My brother loves to cook, but my sister prefers washing dishes.|Kakak laki-laki saya suka memasak, tetapi kakak perempuan saya lebih suka mencuci piring.
+Bake|Memanggang|She baked banana cake, and the kitchen smelled very sweet.|Dia memanggang kue pisang, dan dapurnya berbau sangat manis.
+Boil|Merebus|You must boil the eggs first, or they will be too soft.|Kamu harus merebus telurnya terlebih dahulu, atau mereka akan terlalu lunak.
+Sauté|Menumis|Please sauté the garlic, and then add the fresh prawns.|Tolong tumis bawang putihnya, lalu masukkan udang segar.
+Vegetable|Sayuran|Spinach is a healthy vegetable, and it contains rich vitamins.|Bayam adalah sayuran yang sehat, dan mengandung vitamin yang kaya.
+Fruit|Bah|We bought some sweet fruits, but we forgot to buy lemons.|Kami membeli beberapa buah manis, tetapi kami lupa membeli lemon.
+Sugar|Gula|This tea has too much sugar, so it is bad for your health.|Teh ini memiliki terlalu banyak gula, jadi tidak baik untuk kesehatanmu.
+Salt|Garam|Add a little bit of salt, or the soup will taste plain.|Tambahkan sedikit garam, atau supnya akan terasa hambar.
+Fat|Lemak|Fried chicken has bad fats, so you should limit eating it.|Ayam goreng memiliki lemak jahat, jadi kamu harus membatasi memakannya.
+Healthy|Sehat|They keep a healthy lifestyle, for they want to stay active.|Mereka menjaga gaya hidup sehat, karena mereka ingin tetap aktif.
+Nutritious|Bergizi|Vegetable soup is very nutritious, so we cook it regularly.|Sup sayuran sangat bergizi, jadi kami memasaknya secara teratur.
+Metabolism|Metabolisme|Green tea increases metabolism, and it helps to burn calories.|Teh hijau meningkatkan metabolisme, dan membantu membakar kalori.
+Calorie|Kalori|You should count your daily calories, or you will gain weight.|Kamu harus menghitung kalori harianmu, atau berat badanmu akan naik.
+Fiber|Serat|Oats contain natural fiber, so they are very good for digestion.|Gandum mengandung serat alami, jadi sangat baik untuk pencernaan.
+Cholesterol|Kolesterol|Eat healthy food, or your blood cholesterol will rise fast.|Makanlah makanan sehat, atau kolesterol darahmu akan naik dengan cepat.
+Hydration|Hidrasi|We must maintain proper hydration, so drink water after sports.|Kita harus menjaga hidrasi yang tepat, jadi minumlah air setelah berolahraga.
+Preservative|Pengawet|Avoid foods with artificial preservatives, for they are unhealthy.|Hindari makanan dengan pengawet buatan, karena tidak sehat.
+Organic|Organik|Organic rice is more expensive, yet many people prefer to buy it.|Beras organik lebih mahal, namun banyak orang lebih memilih membelinya.
+Digestive|Pencernaan|Siswa must eat on time, or they will get digestive problems.|Siswa harus makan tepat waktu, atau mereka akan mengalami masalah pencernaan.
+Antioxidant|Antioksidan|Apples have rich antioxidants, so eating them keeps you healthy.|Apel memiliki antioksidan yang kaya, jadi memakannya menjagamu tetap sehat.
+Honey|Madu|He added honey to his tea, and he enjoyed the sweet taste.|Dia menambahkan madu ke tehnya, dan dia menikmati rasa manisnya.
+Ginger|Jahe|She drank warm ginger water, for she wanted to cure her cold.|Dia minum air jahe hangat, karena dia ingin menyembuhkan flu-nya.
+Garlic|Bawang putih|The chef chopped the garlic, and he sautéed it in the pan.|Koki mencincang bawang putih, dan dia menumisnya di wajan.
+Onion|Bawang merah|He chopped the onion, but the strong smell made him cry.|Dia mencincang bawang merah, tetapi baunya yang kuat membuatnya menangis.
+Spicy|Pedas|The curry was very spicy, so they drank cold water quickly.|Karinya sangat pedas, jadi mereka minum air dingin dengan cepat.
+Portion|Porsi|The food portion was small, yet it was highly nutritious.|Porsi makanan itu kecil, namun sangat bergizi.
+Energy|Energi|Healthy food gives you energy, and it helps you study well.|Makanan sehat memberimu energi, dan itu membantumu belajar dengan baik.
+Nutrient|Nutrisi|Milk has vital nutrients, so it is good for young children.|Susu memiliki nutrisi vital, jadi baik untuk anak-anak kecil.
+Supplement|Suplemen|He took calcium supplements, so his bones became stronger.|Dia meminum suplemen kalsium, jadi tulangnya menjadi lebih kuat.
+Unhealthy|Tidak sehat|Fast food is unhealthy, but many teenagers love to eat it.|Makanan cepat saji itu tidak sehat, tetapi banyak remaja suka memakannya.`,
+
+            unit5: `Graffiti|Grafiti|Some hate street graffiti, yet many praise it as art.|Beberapa orang membenci grafiti jalanan, namun banyak yang memujinya sebagai seni.
+Vandalism|Vandalisme|The walls were damaged by vandalism, so the town installed cameras.|Tembok rusak oleh vandalisme, jadi kota memasang kamera.
+Expression|Ekspresi|Painting gives creative freedom, so artists use it for expression.|Melukis memberi kebebasan kreatif, jadi seniman menggunakannya untuk ekspresi.
+Exhibition|Pameran|An art exhibition opened last week, and many people came.|Pameran seni dibuka minggu lalu, dan banyak orang datang.
+Masterpiece|Karya Agung|He used simple tools, yet he created a beautiful masterpiece.|Dia menggunakan alat sederhana, namun dia menciptakan karya agung yang indah.
+Canvas|Kanvas|The artist prepared his canvas, and he started to paint.|Seniman menyiapkan kanvasnya, dan dia mulai melukis.
+Sculpture|Patung|The stone sculpture was very heavy, so they used a truck to move it.|Patung batu itu sangat berat, jadi mereka menggunakan truk untuk memindahkannya.
+Mural|Mural|The mural was on an old building, but the colors were very bright.|Mural itu berada di gedung tua, tetapi warnanya sangat cerah.
+Aesthetic|Estetika|The park has high aesthetic value, so teenagers love to take photos.|Taman memiliki nilai estetika tinggi, jadi remaja suka berfoto.
+Gallery|Galeri|You can visit the gallery today, or you can go there tomorrow.|Kamu bisa mengunjungi galeri hari ini, atau kamu bisa pergi ke sana besok.
+Paint|Melukis|She loves to paint landscapes, but her brother prefers sketching.|Dia suka melukis pemandangan, tetapi saudaranya lebih suka membuat sketsa.
+Brush|Kuas|He bought a new brush, and he cleaned his canvas carefully.|Dia membeli kuas baru, dan dia membersihkan kanvasnya dengan hati-hati.
+Sketch|Sketsa|The artist made a quick sketch, and she showed it to the class.|Seniman membuat sketsa cepat, dan dia menunjukkannya ke kelas.
+Color|Warna|The painting had warm colors, and it looked very peaceful.|Lukisan itu memiliki warna-warna hangat, dan terlihat sangat damai.
+Artist|Seniman|She is a famous local artist, and her works are very expensive.|Dia adalah seniman lokal yang terkenal, dan karya-karyanya sangat mahal.
+Museum|Museum|The museum houses ancient art, but it is closed on Mondays.|Museum ini menyimpan seni kuno, tetapi tutup pada hari Senin.
+Exhibition|Pameran seni|They went to the modern art exhibition, and they saw amazing sculptures.|Mereka pergi ke pameran seni modern, dan mereka melihat patung-patung yang luar biasa.
+Public|Publik|Public art brings joy to people, so the town supports murals.|Seni publik membawa kegembiraan bagi orang-orang, jadi kota mendukung mural.
+Spray|Semprot|He bought some spray paint, and he painted a colorful mural.|Dia membeli beberapa cat semprot, dan dia melukis mural yang berwarna-warni.
+Stencil|Stensil|The street artist used stencils, so he finished the mural fast.|Seniman jalanan menggunakan stensil, sehingga dia menyelesaikan mural dengan cepat.
+Vandal|Vandal|The vandals spray-painted the train, and the police arrested them.|Para vandal menyemprotkan cat ke kereta, dan polisi menangkap mereka.
+Damage|Merusak|Graffiti can damage historical walls, so it is strictly forbidden.|Grafiti dapat merusak tembok bersejarah, jadi itu sangat dilarang.
+Wall|Dinding|The white wall was empty, but now it is covered with a mural.|Dinding putih itu kosong, tetapi sekarang ditutupi dengan mural.
+Creative|Kreatif|She has a creative mind, so she designs beautiful posters.|Dia memiliki pikiran yang kreatif, jadi dia mendesain poster yang indah.
+Artistic|Artistik|He has an artistic talent, and he plays the flute beautifully.|Dia memiliki bakat artistik, dan dia memainkan suling dengan indah.
+Culture|Budaya|Art reflects our local culture, and we must preserve it.|Seni mencerminkan budaya lokal kita, dan kita harus menjaganya.
+Modern|Modern|The gallery exhibits modern art, but older people prefer classics.|Galeri memamerkan seni modern, tetapi orang tua lebih menyukai seni klasik.
+Classical|Klasik|She loves classical paintings, yet she also enjoys modern murals.|Dia menyukai lukisan klasik, namun dia juga menikmati mural modern.
+Visual|Visual|Mural is a beautiful visual art, and it decorates the dark alleys.|Mural adalah seni visual yang indah, dan itu menghiasi gang-gang gelap.
+Draw|Menggambar|He wanted to draw a cat, but he did not have paper.|Dia ingin menggambar kucing, tetapi dia tidak memiliki kertas.
+Paper|Kertas|She wrote her ideas on paper, and she made a sketch.|Dia menulis ide-idenya di atas kertas, dan dia membuat sketsa.
+Pencil|Pensil|Use a soft pencil for drawing, or use black ink.|Gunakan pensil lunak untuk menggambar, atau gunakan tinta hitam.
+Marker|Spidol|He drew a big pattern with a marker, and he colored it.|Dia menggambar pola besar dengan spidol, dan dia mewarnainya.
+Ink|Tinta|The black ink dried quickly, so the sketch looked very clean.|Tinta hitam mengering dengan cepat, sehingga sketsanya terlihat sangat bersih.
+Design|Desain|The poster design was very simple, yet it attracted many buyers.|Desain poster itu sangat sederhana, namun menarik banyak pembeli.
+Abstract|Abstrak|The abstract painting had no clear shape, but it looked beautiful.|Lukisan abstrak tidak memiliki bentuk yang jelas, tetapi terlihat indah.
+Portrait|Potret|The artist painted a beautiful portrait, and she framed it.|Seniman melukis potret yang indah, dan dia membingkainya.
+Frame|Bingkai|He bought a wooden frame, and he put his painting inside.|Dia membeli bingkai kayu, dan dia memasukkan lukisannya ke dalam.
+Clay|Tanah liat|Siswa used clay to make small pots, and they painted them.|Siswa menggunakan tanah liat untuk membuat pot kecil, dan mereka mewarnainya.
+Pottery|Tembikar|The traditional pottery was delicate, so we packed it carefully.|Tembikar tradisional itu rapuh, jadi kami mengemasnya dengan hati-hati.
+Weave|Menenun|The local women weave beautiful mats, and they sell them to tourists.|Para wanita lokal menenun tikar yang indah, dan mereka menjualnya kepada turis.
+Carve|Memahat|He carved a bird on wood, and the sculpture looked realistic.|Dia memahat burung pada kayu, dan patung itu terlihat realistis.
+Craft|Kerajinan|They sell traditional crafts, and tourists buy them as souvenirs.|Mereka menjual kerajinan tradisional, dan turis membelinya sebagai oleh-oleh.
+Hobby|Hobi|Painting is her favorite hobby, and she practices it every day.|Melukis adalah hobi favoritnya, dan dia melatihnya setiap hari.
+Talent|Bakat|He has a natural art talent, so his paintings look professional.|Dia memiliki bakat seni alami, jadi lukisannya terlihat profesional.
+Inspire|Menginspirasi|The scenic beach inspired his artwork, and he painted a mural.|Pantai yang indah menginspirasi karyanya, dan dia melukis mural.
+Master|Ahli|The old master painted for decades, and he held many exhibitions.|Ahli tua itu melukis selama beberapa dekade, dan dia mengadakan banyak pameran.
+Traditional|Tradisional|Traditional art must be protected, or we will lose our heritage.|Seni tradisional harus dilindungi, atau kita akan kehilangan warisan kita.
+Modern|Modern|The city has many modern structures, and they look very aesthetic.|Kota ini memiliki banyak bangunan modern, dan mereka terlihat sangat estetis.
+Appreciate|Mengapresiasi|We must appreciate local art, so please visit the town gallery.|Kita harus mengapresiasi seni lokal, jadi tolong kunjungi galeri kota.`,
+
+            unit6: `Folktale|Cerita Rakyat|Modern kids love mobile games, yet reading old folktales is still fun.|Anak-anak modern suka game ponsel, namun membaca cerita rakyat lama tetap menyenangkan.
+Protagonist|Tokoh Utama|The protagonist was very smart, so he easily tricked the giant.|Tokoh utamanya sangat pintar, jadi dia dengan mudah menipu raksasa itu.
+Antagonist|Tokoh Jahat|The antagonist was defeated, and peace returned to the valley.|Tokoh jahat dikalahkan, dan kedamaian kembali ke lembah.
+Moral|Moral|Read the story carefully, for you will find a good moral lesson.|Bacalah ceritanya dengan cermat, karena kamu akan menemukan pelajaran moral yang baik.
+Narrative|Narasi|The novel has a complex narrative, yet it is very interesting.|Novel ini memiliki narasi yang rumit, namun sangat menarik.
+Legend|Legenda|The legend of the lake is famous, and many travelers look for it.|Legenda danau sangat terkenal, dan banyak pengelana mencarinya.
+Mythical|Mitos/Khayalan|He saw a mythical creature, and he told his friends about it.|Dia melihat makhluk mitos, dan dia memberi tahu teman-temannya tentang hal itu.
+Curse|Kutukan|The prince was turned into a frog by a curse, but the princess saved him.|Pangeran diubah menjadi katak oleh kutukan, tetapi putri menyelamatkannya.
+Climax|Klimaks|The story reached its exciting climax, so I could not stop reading.|Cerita mencapai klimaksnya yang seru, jadi saya tidak bisa berhenti membaca.
+Resolution|Resolusi|The conflict ended peacefully, and the happy resolution made us glad.|Konflik berakhir dengan damai, dan resolusi bahagia membuat kami senang.
+Fable|Fabel|The fable teaches about honesty, and children love the animal characters.|Fabel mengajarkan tentang kejujuran, dan anak-anak menyukai karakter hewan.
+Character|Karakter|The main character was a brave sailor, but he lost his ship.|Karakter utamanya adalah pelaut yang berani, tetapi dia kehilangan kapalnya.
+Witch|Penyihir|The old witch lived in the dark forest, and she had a magic broom.|Penyihir tua tinggal di hutan gelap, dan dia memiliki sapu ajaib.
+Giant|Raksasa|The giant was very strong, yet he was tricked by the smart boy.|Raksasa itu sangat kuat, namun dia ditipu oleh anak laki-laki yang cerdas.
+Fairy|Peri|The little fairy waved her magic wand, and she helped the prince.|Peri kecil melambaikan tongkat ajaibnya, dan dia membantu pangeran.
+Ghost|Hantu|They heard a strange sound, so they thought a ghost was in the room.|Teman-teman mendengar suara aneh, jadi mereka mengira ada hantu di dalam ruangan.
+Magic|Sihir|The magician showed amazing magic, and the audience clapped loudly.|Pesulap menunjukkan sihir yang luar biasa, dan para penonton bertepuk tangan meriah.
+Castle|Istana|The castle stood on the hill, but its gates were locked forever.|Istana berdiri di atas bukit, tetapi gerbangnya terkunci selamanya.
+Kingdom|Kerajaan|The king ruled a peaceful kingdom, and his people lived happily.|Raja memerintah kerajaan yang damai, dan rakyatnya hidup bahagia.
+Queen|Ratu|The queen wore a golden crown, and she greeted the travelers.|Ratu mengenakan mahkota emas, dan dia menyapa para pengelana.
+Prince|Pangeran|The prince rode a white horse, so he looked very brave.|Pangeran mengendarai kuda putih, jadi dia terlihat sangat berani.
+Princess|Putri|The princess was locked in the tower, but she escaped safely.|Putri dikurung di menara, tetapi dia melarikan diri dengan selamat.
+Sword|Pedang|The hero held a sharp sword, and he defeated the scary monster.|Pahlawan memegang pedang tajam, dan dia mengalahkan monster yang menakutkan.
+Monster|Monster|The monster had red eyes, but it was actually very friendly.|Monster itu memiliki mata merah, tetapi sebenarnya sangat ramah.
+Cave|Gua|They entered the dark cave, and they found ancient stone writings.|Mereka memasuki gua yang gelap, dan mereka menemukan tulisan batu kuno.
+Treasure|Harta karun|The pirates buried the gold treasure, but they lost the map.|Para bajak laut mengubur harta karun emas, tetapi mereka kehilangan petanya.
+Map|Peta|We followed the ancient map, so we successfully found the cave.|Kami mengikuti peta kuno, sehingga kami berhasil menemukan gua tersebut.
+Secret|Rahasia|Keep the secret path safe, or enemies will find the kingdom.|Jaga agar jalur rahasia tetap aman, atau musuh akan menemukan kerajaan.
+Ancient|Kuno|They discovered ancient coins, and they gave them to the museum.|Mereka menemukan koin kuno, dan mereka memberikannya ke museum.
+Tale|Dongeng|Grandma told us a bedtime tale, and we fell asleep quickly.|Nenek menceritakan dongeng tidur kepada kami, dan kami tertidur dengan cepat.
+Chief|Ketua|The chief led the village, and he welcomed the visitors warmly.|Ketua memimpin desa, dan dia menyambut para pengunjung dengan hangat.
+Shaman|Dukun|The shaman cured the sick boy, for he used traditional forest herbs.|Dukun menyembuhkan anak laki-laki yang sakit, karena ia menggunakan herbal hutan tradisional.
+Ritual|Ritual|They perform a traditional ritual, and they pray for a good harvest.|Mereka melakukan ritual tradisional, dan mereka berdoa untuk panen yang baik.
+Spell|Mantra|The witch muttered a dark spell, but it did not work.|Penyihir menggumamkan mantra kegelapan, tetapi itu tidak berhasil.
+Healer|Tabib|The healer made a special drink, and the player felt better.|Tabib membuat minuman khusus, dan pemain merasa lebih baik.
+Sacred|Suci|This place is sacred, so you must speak very quietly here.|Tempat ini suci, jadi kamu harus berbicara dengan sangat tenang di sini.
+Forbidden|Terlarang|The swamp is a forbidden area, so children must not play there.|Rawa adalah area terlarang, jadi anak-anak tidak boleh bermain di sana.
+Miracle|Keajaiban|It was a miracle that they survived, and they thanked the dewa.|Merupakan keajaiban bahwa mereka selamat, dan mereka berterima kasih kepada dewa.
+Prophecy|Ramalan|The prophecy was written on the wall, but nobody understood it.|Ramalan itu tertulis di dinding, tetapi tidak ada yang memahaminya.
+Vision|Visi|The leader had a great vision, and he built a strong village.|Pemimpin memiliki visi yang hebat, dan dia membangun desa yang kuat.
+Dream|Mimpi|I had a beautiful dream last night, but I forgot it today.|Saya bermimpi indah semalam, tetapi saya melupakannya hari ini.
+Nightmare|Mimpi buruk|The scary story gave him a nightmare, so he could not sleep.|Cerita menakutkan itu memberinya mimpi buruk, jadi dia tidak bisa tidur.
+Shadow|Bayangan|I saw a dark shadow on the wall, and I felt very afraid.|Saya melihat bayangan gelap di dinding, dan saya merasa sangat takut.
+Light|Cahaya|The light was very bright, so she covered her eyes quickly.|Cahayanya sangat terang, jadi dia segera menutupi matanya.
+Dark|Gelap|The forest was very dark, so they used a torch to walk.|Hutan sangat gelap, jadi mereka menggunakan obor untuk berjalan.
+Peace|Kedamaian|The war ended, and peace was finally restored to the land.|Perang berakhir, dan kedamaian akhirnya dipulihkan ke tanah tersebut.
+Betrayal|Pengkhianatan|The general committed a betrayal, so the king arrested him.|Jenderal melakukan pengkhianatan, jadi raja menangkapnya.
+Revenge|Dendam|Do not take revenge on others, for it will only bring sadness.|Jangan membalas dendam pada orang lain, karena itu hanya akan membawa kesedihan.
+Forgive|Memaafkan|Please forgive my mistake, and let us be friends again.|Tolong maafkan kesalahan saya, dan mari kita berteman lagi.
+Plot|Alur|The plot of the story was simple, so the children understood it.|Alur cerita itu sederhana, jadi anak-anak memahaminya.`,
+
+            unit7: `Device|Perangkat|Digital devices make our life easy, but they can hurt our eyes.|Perangkat digital membuat hidup kita mudah, tetapi mereka dapat merusak mata kita.
+Interactive|Interaktif|The new app is highly interactive, so students love to use it.|Aplikasi baru sangat interaktif, jadi siswa senang menggunakannya.
+Connectivity|Konektivitas|The internet connectivity is very weak, so we cannot join the class.|Konektivitas internet sangat lemah, jadi kami tidak bisa mengikuti kelas.
+Platform|Platform|You can upload your video to this platform, or you can send it by email.|Kamu bisa mengunggah videomu ke platform ini, atau kamu bisa mengirimkannya lewat email.
+Cyberbullying|Perundungan Siber|Cyberbullying is a serious issue, so schools must teach digital ethics.|Perundungan siber adalah masalah serius, jadi sekolah harus mengajarkan etika digital.
+Privacy|Privasi|Sharing photos is fun, but you must protect your privacy.|Berbagi foto menyenangkan, tetapi kamu harus melindungi privasimu.
+Information|Informasi|The internet has too much fake information, so we must check the sources.|Internet memiliki terlalu banyak informasi palsu, jadi kita harus memeriksa sumbernya.
+Digital|Digital|We must learn digital skills, or we will lose future jobs.|Kita harus mempelajari keterampilan digital, atau kita akan kehilangan pekerjaan masa depan.
+Account|Akun|Secure your account with a strong password, and do not share it.|Amankan akunmu dengan kata sandi yang kuat, dan jangan bagikan.
+Software|Perangkat Lunak|Our computer was too slow, so we deleted the heavy software.|Komputer kami terlalu lambat, jadi kami menghapus perangkat lunak yang berat.
+Online|Daring|They study online, and they complete their tasks on the computer.|Mereka belajar daring, dan mereka menyelesaikan tugas mereka di komputer.
+Offline|Luring|The internet was down, so we did offline activities instead.|Internet mati, jadi kami melakukan aktivitas luring sebagai gantinya.
+Website|Situs web|He created a website, and he shared local news on it.|Dia membuat situs web, dan dia membagikan berita lokal di dalamnya.
+Network|Jaringan|The network was unstable, but the online test continued.|Jaringannya tidak stabil, tetapi ujian daring tetap berlanjut.
+Password|Kata sandi|Do not write your password on paper, or someone will find it.|Jangan menulis kata sandimu di kertas, atau seseorang akan menemukannya.
+Data|Data|He saved the research data, and he backed it up on a drive.|Dia menyimpan data penelitian, dan dia mencadangkannya di drive.
+Security|Keamanan|Digital security is important, so we must use antivirus.|Keamanan digital itu penting, jadi kita harus menggunakan antivirus.
+Hacker|Peretas|The hacker broke into the database, but the system blocked him.|Peretas membobol database, tetapi sistem memblokirnya.
+Virus|Virus|The computer was infected by a virus, so it became very slow.|Komputer terinfeksi virus, sehingga menjadi sangat lambat.
+Download|Unduh|I wanted to download the file, but my connection was too weak.|Saya ingin mengunduh file tersebut, tetapi koneksi saya terlalu lemah.
+Upload|Unggah|She uploaded the photo, and she shared the link with her friends.|Dia mengunggah foto tersebut, dan dia membagikan tautannya kepada teman-temannya.
+Message|Pesan|He received an urgent message, and he replied to it quickly.|Dia menerima pesan mendesak, dan dia membalasnya dengan cepat.
+Email|Email|She sent the report by email, but she forgot the attachment.|Dia mengirim laporan lewat email, tetapi dia lupa lampirannya.
+Chat|Obrolan|They had an online chat, and they discussed the school project.|Mereka melakukan obrolan daring, dan mereka membahas proyek sekolah.
+Search|Cari|You can search for information online, or you can read a book.|Kamu bisa mencari informasi secara daring, atau kamu bisa membaca buku.
+Engine|Mesin pencari|We used a search engine, and we found many useful articles.|Kami menggunakan mesin pencari, dan kami menemukan banyak artikel bermanfaat.
+Link|Tautan|Click the digital link, and it will direct you to the library.|Klik tautan digital itu, dan itu akan mengarahkanmu ke perpustakaan.
+Browser|Peramban|Open your web browser, and type the website address carefully.|Buka peramban webmu, dan ketik alamat situs web dengan hati-hati.
+Screen|Layar|The phone screen was cracked, but it still worked perfectly.|Layar ponsel retak, tetapi masih berfungsi dengan sempurna.
+Keyboard|Papan ketik|The keyboard was dirty, so he cleaned it with a dry cloth.|Papan ketiknya kotor, jadi dia membersihkannya dengan kain kering.
+Mouse|Tetikus|She bought a wireless mouse, and she connected it to her laptop.|Dia membeli tetikus nirkabel, dan dia menghubungkannya ke laptopnya.
+Laptop|Laptop|He used his laptop to study, and he did it for three hours.|Dia menggunakan laptopnya untuk belajar, dan dia melakukannya selama tiga jam.
+Computer|Komputer|The school bought new computers, and students felt very happy.|Sekolah membeli komputer baru, dan para siswa merasa sangat senang.
+Smartphone|Ponsel pintar|She checked her smartphone, but she did not see any messages.|Dia memeriksa ponsel pintarnya, tetapi dia tidak melihat adanya pesan.
+Tablet|Tablet|He used a digital tablet to draw, so his sketches looked clean.|Dia menggunakan digital tablet untuk menggambar, jadi sketsanya terlihat bersih.
+Application|Aplikasi|Download the learning application, and register your account.|Unduh aplikasi pembelajaran, dan daftarkan akunmu.
+Update|Pembaruan|The system needs an update, or some features will not work.|Sistem membutuhkan pembaruan, atau beberapa fitur tidak akan berfungsi.
+Settings|Pengaturan|Open the settings menu, and adjust the brightness of your screen.|Buka menu pengaturan, dan sesuaikan kecerahan layarmu.
+Connection|Koneksi|The connection was lost, so we had to restart the router.|Koneksinya terputus, jadi kami harus menyalakan ulang router.
+Social Media|Media Sosial|She uses social media daily, but she never shares private photos.|Dia menggunakan media sosial setiap hari, tetapi dia tidak pernah membagikan foto pribadi.
+cybersecurity|Keamanan siber|We must study cybersecurity, for it protects our personal data.|Kita harus mempelajari keamanan siber, karena itu melindungi data pribadi kita.
+Cloud|Awan digital|Save the files in the cloud, and you can access them anywhere.|Simpan file di awan digital, dan kamu bisa mengaksesnya di mana saja.
+Backup|Cadangan|Create a system backup, or you will lose your research files.|Buat cadangan sistem, atau kamu akan kehilangan file penelitianmu.
+Spam|Spam|Delete the spam email, and do not click any links inside.|Hapus email spam, dan jangan klik tautan apa pun di dalamnya.
+Phishing|Phishing|Phishing is a cyber crime, so we must protect our accounts.|Phishing adalah kejahatan dunia maya, jadi kita harus melindungi akun kita.
+Notification|Notifikasi|He turned off his notifications, so he studied peacefully.|Dia mematikan notifikasinya, jadi dia belajar dengan tenang.
+Scroll|Gulir|She scrolled through the website, but she did not find the news.|Dia menggulir situs web, tetapi dia tidak menemukan berita tersebut.
+Click|Klik|Click the submit button, and wait for the confirmation message.|Klik tombol kirim, dan tunggu pesan konfirmasi.
+Virtual|Virtual|They held a virtual meeting, and they made a great decision.|Mereka mengadakan pertemuan virtual, dan mereka membuat keputusan yang hebat.
+Digitalize|Digitalisasi|We must digitalize our library, so students can read online.|Kita harus mendigitalisasi perpustakaan kita, jadi siswa bisa membaca daring.`,
+
+            unit8: `Deforestation|Deforestasi|Trees produce clean oxygen, but heavy deforestation is ruining the air.|Pohon menghasilkan oksigen bersih, tetapi deforestasi yang parah merusak udara.
+Pollution|Polusi|The factory dumped chemical waste, so the water pollution killed the fish.|Pabrik membuang limbah kimia, sehingga polusi air membunuh ikan.
+Conservation|Konservasi|Coral reefs are endangered, so marine conservation is very important.|Terumbu karang terancam punah, jadi konservasi laut sangat penting.
+Ecosystem|Ekosistem|We must protect the forest, or we will destroy the wild ecosystem.|Kita harus melindungi hutan, atau kita akan merusak ekosistem liar.
+Biodiversity|Keanekaragaman|Our island has rich biodiversity, yet many species are dying.|Pulau kami memiliki keanekaragaman hayati yang kaya, namun banyak spesies yang mati.
+Erosion|Erosi|Tree roots hold the coastal sand, so cutting them causes soil erosion.|Akar pohon menahan pasir pantai, jadi menebangnya menyebabkan erosi tanah.
+Sustainability|Keberlanjutan|We want a green future, so practicing sustainability is essential.|Kita ingin masa depan hijau, jadi mempraktikkan keberlanjutan sangatlah penting.
+Landfill|TPA|The landfill is already full of plastic, yet people do not recycle.|TPA sudah penuh dengan plastik, namun orang-orang tidak mendaur ulang.
+Greenhouse|Rumah Kaca|CO2 emissions are rising fast, and they increase the greenhouse effect.|Emisi CO2 meningkat cepat, dan mereka meningkatkan efek rumah kaca.
+Renewable|Terbarukan|Fossil fuels will run out, so we must use renewable energy.|Bahan bakar fosil akan habis, jadi kita harus menggunakan energi terbarukan.
+Trash|Sampah|We collected plastic trash, and we put it in the recycling bin.|Kami mengumpulkan sampah plastik, dan kami memasukkannya ke tempat sampah daur ulang.
+Garbage|Sampah kotor|The garbage smelled very bad, so we covered the bin tightly.|Sampah kotor itu berbau sangat tidak sedap, jadi kami menutup tempat sampahnya rapat-rapat.
+Litter|Membuang sampah|Do not litter on the beach, or you will harm the sea birds.|Jangan membuang sampah sembarangan di pantai, atau kamu akan membayakan burung laut.
+Compost|Kompos|She made organic compost, and she used it for her garden plants.|Dia membuat kompos organik, dan dia menggunakannya untuk tanaman kebunnya.
+Recycle|Daur ulang|We must recycle paper, or we will destroy more wild forests.|Kita harus mendaur ulang kertas, atau kita akan merusak lebih banyak hutan liar.
+Environment|Lingkungan|We should keep our environment clean, so stop illegal logging.|Kita harus menjaga lingkungan kita tetap bersih, jadi hentikan penebangan liar.
+Resource|Sumber daya|Water is a precious resource, so we should use it wisely.|Air adalah sumber daya yang berharga, jadi kita harus menggunakannya dengan bijak.
+Climate|Iklim|The climate is changing fast, but many people still ignore it.|Iklim berubah dengan cepat, tetapi banyak orang masih mengabaikannya.
+Atmosphere|Atmosfer|Toxic smoke pollutes the atmosphere, so air quality is declining.|Asap beracun mencemari atmosfer, sehingga kualitas udara menurun.
+Ozone|Ozon|Chemicals damage the ozone layer, so global temperatures rise.|Bahan kimia merusak lapisan ozon, sehingga suhu global meningkat.
+Warming|Pemanasan|Global warming is real, and we must take action to stop it.|Pemanasan global itu nyata, dan kita harus mengambil tindakan untuk menghentikannya.
+Habitat|Habitat|Deforestation destroys the forest habitat, so wild animals escape.|Deforestasi merusak habitat hutan, sehingga hewan liar melarikan diri.
+Extinction|Kepunahan|Many animals face extinction, yet people still hunt them illegally.|Banyak hewan menghadapi kepunahan, namun orang masih memburunya secara liar.
+Endangered|Terancam punah|The tarsier is an endangered species, so we must protect its forest.|Tarsius adalah spesies yang terancam punah, jadi kita harus melindungi hutannya.
+Forest|Hutan|The forest was very green, but the local miners destroyed it.|Hutan itu sangat hijau, tetapi para penambang lokal merusaknya.
+Swamp|Rawa|A crocodile lives in the swamp, so children must not play there.|Seekor buaya tinggal di rawa, jadi anak-anak tidak boleh bermain di sana.
+River|Sungai|The river water was clear, but the chemical waste polluted it.|Air sungai itu jernih, tetapi limbah kimia mencemarinya.
+Lake|Danau|We swam in the calm lake, and we saw many small fish.|Kami berenang di danau yang tenang, dan kami melihat banyak ikan kecil.
+Coast|Pesisir|The local community cleaned the coast, and they collected plastic.|Komunitas lokal membersihkan pesisir, dan mereka mengumpulkan plastik.
+Ocean|Samudra|The ocean is very deep, and it contains millions of creatures.|Samudra sangat dalam, dan berisi jutaan makhluk hidup.
+Mangrove|Bakau|Mangrove trees protect the beach, so do not cut them down.|Pohon bakau melindungi pantai, jadi jangan menebangnya.
+Coral|Karang|The coral reef is beautiful, but the boat anchor damaged it.|Terumbu karang itu indah, tetapi jangkar perahu merusaknya.
+Pollutant|Polutan|Smoke from cars is a dangerous pollutant, so use public buses.|Asap dari mobil adalah polutan berbahaya, jadi gunakan bus umum.
+Toxic|Beracun|The waste was highly toxic, so the fish died in the river.|Limbah tersebut sangat beracun, sehingga ikan-ikan mati di sungai.
+Chemical|Kimia|Never use chemical pesticides, or you will harm useful insects.|Jangan pernah menggunakan pestisida kimia, atau kamu akan membahayakan serangga yang berguna.
+Agriculture|Pertanian|Organic agriculture is healthy, and it protects the soil.|Pertanian organik itu sehat, dan itu melindungi tanah.
+Soil|Tanah|The soil was dry and cracked, so they watered it heavily.|Tanahnya kering dan retak, jadi mereka menyiramnya dengan banyak air.
+Fertilizer|Pupuk|He used organic fertilizer, and his plants grew very fast.|Dia menggunakan pupuk organik, dan tanamannya tumbuh sangat cepat.
+Pesticide|Pestisida|The chemical pesticide was dangerous, so they stopped using it.|Pestisida kimia itu berbahaya, jadi mereka berhenti menggunakannya.
+Wildlife|Satwa liar|The jungle has rich wildlife, and we must preserve it.|Hutan memiliki satwa liar yang kaya, dan kita harus menjaganya.
+Nature|Alam|Nature provides clean air, so we should always respect it.|Alam menyediakan udara bersih, jadi kita harus selalu menghormatinya.
+Forestry|Kehutanan|He studied tropical forestry, and he wrote books about plants.|Dia mempelajari kehutanan tropis, dan dia menulis buku tentang tanaman.
+Ecology|Ekologi|Our teacher explained forest ecology, and we listened carefully.|Guru kami menjelaskan ekologi hutan, dan kami mendengarkan dengan cermat.
+Ecologist|Ahli ekologi|The ecologist visited the island, and he did research on birds.|Ahli ekologi mengunjungi pulau itu, dan dia melakukan penelitian tentang burung.
+Species|Spesies|They found a new plant species, and they gave it a local name.|Mereka menemukan spesies tanaman baru, dan mereka memberinya nama lokal.
+Observe|Mengamati|Siswa observed the wild tarsiers, and they took pictures.|Siswa mengamati tarsius liar, dan mereka mengambil foto.
+Awareness|Kesadaran|We must raise environment awareness, so let us plant trees.|Kita harus meningkatkan kesadaran lingkungan, jadi mari kita menanam pohon.
+Protect|Melindungi|We must protect our planet, for it is our only home.|Kita harus melindungi planet kita, karena ini adalah satu-satunya rumah kita.
+Preserve|Menjaga|Preserve the natural park, or future kids will not see wildlife.|Jaga taman alam, atau anak-anak masa depan tidak akan melihat satwa liar.
+Green|Hijau|The school garden was green, and the students felt very relaxed.|Kebun sekolah itu hijau, dan para siswa merasa sangat santai.`,
+
+            unit9: `Fitness|Kebugaran|She runs every morning, and she does yoga to maintain her fitness.|Dia berlari setiap pagi, dan dia melakukan yoga untuk menjaga kebugarannya.
+Gym|Gimnasium|My brother exercises at the gym, but I prefer jogging in the park.|Kakak saya berolahraga di gimnasium, tetapi saya lebih suka joging di taman.
+Stress|Stres|Heavy schoolwork causes stress, so students must rest.|Tugas sekolah yang berat menyebabkan stres, jadi siswa harus beristirahat.
+Nutrient|Nutrisi|Fresh fruits have vital nutrients, and they boost your energy.|Buah segar memiliki nutrisi vital, dan mereka meningkatkan energimu.
+Obesity|Obesitas|Lack of exercise causes obesity, so we should eat healthy food.|Kurang olahraga menyebabkan obesitas, jadi kita harus makan makanan sehat.
+Hydration|Hidrasi|Drink water after training, for proper hydration is good for you.|Minumlah air setelah latihan, karena hidrasi yang tepat baik untukmu.
+Workout|Latihan|He made a new workout routine, and he followed it for weeks.|Dia membuat rutinitas latihan baru, dan dia mengikutinya selama berminggu-minggu.
+Fatigue|Kelelahan|The long run caused muscle fatigue, so the players rested.|Lari yang lama menyebabkan kelelahan otot, jadi para pemain beristirahat.
+Aerobic|Aerobik|They do aerobic exercises in the morning, for it makes them feel fresh.|Mereka melakukan latihan aerobik di pagi hari, karena itu membuat mereka merasa segar.
+Wellness|Kesehatan|Our school has a wellness program, and many students joined.|Sekolah kami memiliki program kesehatan, dan banyak siswa ikut.
+Health|Kesehatan|He stopped eating junk food, so his overall health improved fast.|Dia berhenti makan makanan siap saji, sehingga kesehatan keseluruhannya membaik dengan cepat.
+Yoga|Yoga|My sister practices yoga, and it makes her feel very relaxed.|Kakak perempuan saya berlatih yoga, dan itu membuatnya merasa sangat rileks.
+Exercise|Olahraga|You must do daily exercise, or you will feel weak and tired.|Kamu harus berolahraga setiap hari, atau kamu akan merasa lemah dan lelah.
+Active|Aktif|He keeps an active lifestyle, and he plays tennis every weekend.|Dia menjaga gaya hidup aktif, dan dia bermain tenis setiap akhir pekan.
+Sedentary|Pasif|Do not keep a sedentary habit, or your body muscles will weaken.|Jangan memelihara kebiasaan pasif, atau otot tubuhmu akan melemah.
+Habit|Kebiasaan|Drinking sweet tea is a bad habit, but many people love it.|Minum teh manis adalah kebiasaan buruk, tetapi banyak orang menyukainya.
+Life|Hidup|She wants a healthy life, so she eats vegetables and fruits.|Dia menginginkan hidup yang sehat, jadi dia makan sayuran dan buah-buahan.
+Muscle|Otot|He lifted weights at the gym, and his arm muscles grew big.|Dia mengangkat beban di gym, dan otot lengannya menjadi besar.
+Bone|Tulang|Milk contains rich calcium, so it keeps your bones strong.|Susu mengandung kalsium yang kaya, jadi itu menjaga tulangmu tetap kuat.
+Heart|Jantung|Running is good for your heart, and it improves your stamina.|Berlari baik untuk jantungmu, dan itu meningkatkan staminamu.
+Stamina|Stamina|He swam for two hours, yet his high stamina kept him active.|Dia berenang selama dua jam, namun staminanya yang tinggi membuatnya tetap aktif.
+Relax|Santai|Siswa can relax after school, but they must study at night.|Siswa bisa bersantai setelah sekolah, tetapi mereka harus belajar di malam hari.
+Meditation|Meditasi|She sat under the tree, and she started her daily meditation.|Dia duduk di bawah pohon, dan dia memulai meditasi hariannya.
+Mental|Mental|Good sleep is essential for mental health, so rest on time.|Tidur yang nyenyak penting untuk kesehatan mental, jadi beristirahatlah tepat waktu.
+Physical|Fisik|Gymnastics improves physical strength, and it is highly beneficial.|Senam meningkatkan kekuatan fisik, dan itu sangat bermanfaat.
+Strength|Kekuatan|He did push-ups daily, so his upper body strength improved.|Dia melakukan push-up setiap hari, jadi kekuatan tubuh bagian atasnya meningkat.
+Flexible|Fleksibel|Yoga makes your body flexible, and it cures back pain.|Yoga membuat tubuhmu fleksibel, dan itu menyembuhkan sakit punggung.
+Joint|Sendi|Older people suffer joint pain, so they should exercise gently.|Orang tua mengalami nyeri sendi, jadi mereka harus berolahraga dengan lembut.
+Therapy|Terapi|He had physical therapy, and his injured leg recovered fast.|Dia menjalani terapi fisik, dan kakinya yang cedera pulih dengan cepat.
+Breathe|Bernapas|Breathe fresh air deeply, and you will feel relaxed instantly.|Hirup udara segar dalam-dalam, dan kamu akan merasa rileks seketika.
+Oxygen|Oksigen|Plants release clean oxygen, so we should keep them in our room.|Tanaman melepaskan oksigen bersih, jadi kita harus menyimpannya di kamar kita.
+Rest|Teristirahat|The training was very hard, so they took a short rest.|Latihannya sangat berat, jadi mereka beristirahat sejenak.
+Sleep|Tidur|You should get eight hours of sleep, or you will feel tired.|Kamu harus tidur delapan jam, atau kamu akan merasa lelah.
+Insomnia|Insomnia|He suffered from insomnia, so he drank warm milk before bed.|Dia menderita insomnia, jadi dia minum susu hangat sebelum tidur.
+Hydration|Hidrasi|We must maintain proper hydration, so drink water after sports.|Kita harus menjaga hidrasi yang tepat, jadi minumlah air setelah berolahraga.
+Dehydration|Dehidrasi|He worked under the hot sun, so he suffered dehydration.|Dia bekerja di bawah terik matahari, sehingga ia mengalami dehidrasi.
+Digestive|Pencernaan|Avoid spicy food at night, or your digestive system will hurt.|Hindari makanan pedas di malam hari, atau sistem pencernaanmu akan sakit.
+Diet|Diet|The doctor suggested a green diet, and she followed it well.|Dokter menyarankan diet hijau, dan dia mengikutinya dengan baik.
+Obese|Obesitas|Unbalanced meals make you obese, so avoid eating too much sugar.|Makanan yang tidak seimbang membuatmu obesitas, jadi hindari makan terlalu banyak gula.
+Supplement|Suplemen|She takes vitamin supplements, for she wants to stay healthy.|Dia meminimun suplemen vitamin, karena ia ingin tetap sehat.
+Fatigue|Kelelahan|The long journey caused fatigue, so they slept immediately.|Perjalanan jauh itu menyebabkan kelelahan, jadi mereka langsung tidur.
+Illness|Penyakit|He avoided dirty water, for he wanted to prevent any illness.|Dia menghindari air kotor, karena dia ingin mencegah penyakit apa pun.
+Immune|Imun|Fresh oranges boost your immune system, and they prevent cold.|Jeruk segar meningkatkan sistem imun Anda, dan mereka mencegah flu.
+Infection|Infeksi|The wound got a serious infection, so he visited the doctor.|Lukanya terkena infeksi serius, jadi dia mengunjungi dokter.
+Doctor|Dokter|The doctor gave him medicine, and he recovered from his cold.|Dokter memberinya obat, dan dia sembuh dari flu-nya.
+Medicine|Obat|Take your medicine on time, or you will not recover quickly.|Minumlah obatmu tepat waktu, atau kamu tidak akan sembuh dengan cepat.
+Care|Perawatan|The clinic provides good care, and the patients feel happy.|Klinik menyediakan perawatan yang baik, dan para pasien merasa senang.
+Wellness|Kesehatan|We started a wellness club, and many students registered.|Kami memulai klub kesehatan, dan banyak siswa mendaftar.
+Fresh|Segar|The air was very fresh, so they walked along the green park.|Udaranya sangat segar, jadi mereka berjalan di sepanjang taman hijau.
+Smile|Senyum|A friendly smile brings joy, so keep a positive attitude.|Senyum yang ramah membawa kegembiraan, jadi jagalah sikap positif.`,
+
+            unit10: `Emissions|Emisi|Factories release toxic emissions, and they pollute our city air.|Pabrik melepaskan emisi beracun, dan mereka mencemari udara kota kita.
+Recycle|Daur Ulang|You can recycle plastic bottles, or you can throw them away.|Kamu bisa mendaur ulang botol plastik, atau kamu bisa membuangnya.
+Climate|Iklim|The climate is changing fast, yet many countries still ignore it.|Iklim berubah cepat, namun banyak negara masih mengabaikannya.
+Environment|Lingkungan|We must protect the forest environment, so stop illegal logging.|Kita harus melindungi lingkungan hutan, jadi hentikan penebangan liar.
+Pollutant|Polutan|Car exhaust is a dangerous pollutant, so we should use buses.|Knalpot mobil adalah polutan berbahaya, jadi kita harus menggunakan bus.
+Organic|Organik|Organic farming does not use chemicals, so it is safer for nature.|Pertanian organik tidak menggunakan bahan kimia, jadi lebih aman bagi alam.
+Wildlife|Satwa Liar|Forest fires destroy wildlife, and many animals lose their homes.|Kebakaran hutan merusak satwa liar, dan banyak hewan kehilangan rumah mereka.
+Conservation|Konservasi|We must support animal conservation, or wild tigers will die out.|Kita harus mendukung konservasi hewan, atau harimau liar akan punah.
+Awareness|Kesadaran|Schools must raise environmental awareness, so students plant trees.|Sekolah harus meningkatkan kesadaran lingkungan, jadi siswa menanam pohon.
+Eco-friendly|Ramah Lingkungan|Paper bags are eco-friendly, but plastic bags cause long-term pollution.|Kantong kertas ramah lingkungan, tetapi kantong plastik menyebabkan polusi jangka panjang.
+Biodiversity|Keanekaragaman|Our island has rich biodiversity, yet many unique plants are dying.|Pulau kami memiliki keanekaragaman hayati yang kaya, namun banyak tanaman unik yang mati.
+Deforestation|Deforestasi|Logging brings money, but heavy deforestation is ruining our climate.|Penebangan membawa uang, tetapi deforestasi yang parah merusak iklim kita.
+Swamp|Rawa|Crocodiles live in the swamp, so do not swim in that area.|Buaya tinggal di rawa, jadi jangan berenang di daerah tersebut.
+Ocean|Samudra|The ocean contains millions of creatures, and they must be protected.|Samudra mengandung jutaan makhluk hidup, dan mereka harus dilindungi.
+Coral|Karang|The coral reefs are beautiful, but boat anchors damage them.|Terumbu karang itu indah, tetapi jangkar perahu merusaknya.
+Pollution|Polusi|Water pollution killed the fish, so local fishermen felt sad.|Polusi air membunuh ikan, sehingga nelayan setempat merasa sedih.
+Trash|Sampah|Collect the plastic trash, and put it in the recycling bin.|Kumpulkan sampah plastik, dan masukkan ke tempat sampah daur ulang.
+Garbage|Sampah kotor|The garbage was piled up, so it smelled extremely bad.|Sampah kotor itu menumpuk, sehingga baunya sangat tidak sedap.
+Litter|Membuang sampah|Do not litter in the park, or the police will penalize you.|Jangan membuang sampah sembarangan di taman, atau polisi akan menghukummu.
+Compost|Kompos|We made organic compost, and we used it for our vegetables.|Kami membuat kompos organik, dan kami menggunakannya untuk sayuran kami.
+Resources|Sumber daya|Water and coal are vital resources, so use them carefully.|Air dan batu bara adalah sumber daya vital, jadi gunakanlah dengan hati-hati.
+Atmosphere|Atmosfer|Smoke from factories pollutes the atmosphere, and the air becomes dirty.|Asap dari pabrik mencemari atmosfer, dan udara menjadi kotor.
+Ozone|Ozon|CFC gases damage the ozone layer, so global warming gets worse.|Gas CFC merusak lapisan ozon, sehingga pemanasan global memburuk.
+Warming|Pemanasan|Global warming is real, so we must stop burning coal now.|Pemanasan global itu nyata, jadi kita harus berhenti membakar batu bara sekarang.
+Habitat|Habitat|Cutting trees destroys the animal habitat, and species lose their homes.|Penebangan pohon merusak habitat hewan, dan spesies kehilangan rumah mereka.
+Extinction|Kepunahan|Hunting leads to animal extinction, so we must stop it now.|Perburuan menyebabkan kepunahan hewan, jadi kita harus menghentikannya sekarang.
+Endangered|Terancam punah|The tarsier is an endangered animal, so protect its forest habitat.|Tarsius adalah hewan yang terancam punah, jadi lindungi habitat hutan mereka.
+Forest|Hutan|The forest is green and beautiful, but miners are destroying it.|Hutan itu hijau dan indah, tetapi para penambang merusaknya.
+Swamp|Rawa-raw|Snakes live in the swamp-lands, so we must walk very carefully.|Ular tinggal di rawa-rawa, jadi kita harus berjalan dengan sangat hati-hati.
+River|Sungai|The river was very clear, but toxic waste polluted the water.|Sungai itu sangat jernih, tetapi limbah beracun mencemari airnya.
+Lake|Danau|We rented a boat on the lake, and we saw beautiful wild birds.|Kami menyewa perahu di danau, dan kami melihat burung liar yang indah.
+Coast|Pesisir|They cleaned the sandy coast, and they collected plastic trash.|Mereka membersihkan pesisir berpasir, dan mereka mengumpulkan sampah plastik.
+Mangrove|Bakau|Mangrove forests protect the shore, so do not cut them down.|Hutan bakau melindungi pantai, jadi jangan menebangnya.
+Ozone|Lapisan ozon|Protect the ozone layer, or ultraviolet rays will harm us.|Lindungi lapisan ozon, atau sinar ultraviolet akan membahayakan kita.
+Toxic|Beracun|The factory waste is toxic, so we must filter it carefully.|Limbah pabrik itu beracun, jadi kita harus menyaringnya dengan hati-hati.
+Chemical|Kimia|Never use chemical fertilizers, or you will ruin the soil.|Jangan pernah menggunakan pupuk kimia, atau kamu akan merusak tanah.
+Agriculture|Pertanian|Sustainable agriculture is healthy, and it keeps the soil fertile.|Pertanian berkelanjutan itu sehat, dan itu menjaga tanah tetap subur.
+Soil|Tanah|The soil was very fertile, so our corn grew exceptionally fast.|Tanahnya sangat subur, sehingga jagung kami tumbuh sangat cepat.
+Fertilizer|Pupuk|He used organic compost as fertilizer, and the plants grew.|Dia menggunakan kompos organik sebagai pupuk, dan tanamannya tumbuh.
+Pesticide|Pestisida|The pesticide killed useful insects, so we stopped using it.|Pestisida membunuh serangga yang berguna, jadi kami berhenti menggunakannya.
+Wildlife|Satwa liar|The reserve protects wildlife, and many tourists visit it.|Cagar alam melindungi satwa liar, dan banyak turis mengunjunginya.
+Nature|Alam|Nature provides clean air, so protect it for future generations.|Alam menyediakan udara bersih, jadi lindungilah untuk generasi mendatang.
+Forestry|Kehutanan|He works in the forestry department, and he protects the trees.|Dia bekerja di departemen kehutanan, dan dia melindungi pepohonan.
+Ecologist|Ahli ekologi|The ecologist researched the forest, and he found new species.|Ahli ekologi meneliti hutan, dan dia menemukan spesies baru.
+Ecology|Ekologi|We studied forest ecology today, and it was very interesting.|Kami mempelajari ekologi hutan hari ini, dan itu sangat menarik.
+Species|Spesies|They found a new frog species, and they took many pictures.|Mereka menemukan spesies katak baru, dan mereka mengambil banyak foto.
+Observation|Pengamatan|Siswa did an observation, and they wrote a detailed report.|Siswa melakukan pengamatan, dan mereka menulis laporan terperinci.
+Preserve|Menjaga|We must preserve our parks, or future kids will lose them.|Kita harus menjaga taman kita, atau anak-anak masa depan akan kehilangannya.
+Green|Hijau|The valley was green and wide, and it looked very peaceful.|Lembah itu hijau dan luas, dan terlihat sangat damai.
+Trash|Tempat sampah|Put the garbage in the trash, and keep our school clean.|Masukkan sampah ke tempat sampah, dan jaga sekolah kita tetap bersih.`,
+
+            unit11: `Budget|Anggaran|She wanted to buy a laptop, but her tight budget did not allow it.|Dia ingin membeli laptop, tetapi anggarannya yang ketat tidak mengizinkannya.
+Investment|Investasi|Buying land is a safe investment, so my father saved his money.|Membeli tanah adalah investasi yang aman, jadi ayah saya menabung uangnya.
+Transaction|Transaksi|The transaction was secured with a password, so we felt safe.|Transaksi dilindungi dengan kata sandi, jadi kami merasa aman.
+Currency|Mata Uang|Our currency fluctuated last month, yet food prices remained stable.|Mata uang kami berfluktuasi bulan lalu, namun harga makanan tetap stabil.
+Savings|Tabungan|Put your money in a savings account, and you will build a safe future.|Masukkan uangmu ke akun tabungan, dan kamu akan membangun masa depan yang aman.
+Inflation|Inflasi|The economy is facing high inflation, so prices are rising fast.|Ekonomi sedang menghadapi inflasi tinggi, jadi harga-harga naik cepat.
+Expenses|Pengeluaran|His expenses were higher than his income, so he cut his lifestyle.|Pengeluarannya lebih tinggi daripada pendapatannya, jadi dia mengurangi gaya hidupnya.
+Revenue|Pendapatan|The pandemic hurt local stores, yet online sales boosted their revenue.|Pandemi merugikan toko-toko lokal, namun penjualan daring mendongkrak pendapatan mereka.
+Debt|Utang|Do not borrow money for luxury items, or you will fall into debt.|Jangan meminjam uang untuk barang mewah, atau kamu akan terlilit utang.
+Income|Pendapatan|Her monthly income was stable, so she decided to buy a house.|Pendapatan bulanannya stabil, jadi dia memutuskan untuk membeli rumah.
+Finance|Keuangan|He studied international finance, and he got a job at the bank.|Dia mempelajari keuangan internasional, dan dia mendapat pekerjaan di bank.
+Tax|Pajak|We must pay our taxes on time, or the government will penalize us.|Kita harus membayar pajak tepat waktu, atau pemerintah akan hukum kita.
+Loan|Pinjaman|He applied for a bank loan, but his application was rejected.|Dia mengajukan pinjaman bank, tetapi pengajuannya ditolak.
+Interest|Bunga|The bank offers low interest loans, so many people borrow money.|Bank menawarkan pinjaman bunga rendah, sehingga banyak orang meminjam uang.
+Profit|Keuntungan|Our business made a huge profit, and we expanded our local shop.|Bisnis kami menghasilkan keuntungan besar, dan kami memperluas toko lokal kami.
+Loss|Kerugian|The store suffered a financial loss, so they closed early.|Toko mengalami kerugian finansial, sehingga mereka tutup lebih awal.
+Asset|Aset|Land is a valuable physical asset, and its price rises every year.|Tanah adalah aset fisik yang berharga, dan harganya naik setiap tahun.
+Liability|Kewajiban|Unpaid loans are a serious liability, so pay them immediately.|Pinjaman yang belum dibayar adalah kewajiban serius, jadi bayarlah segera.
+Cash|Uang tunai|He paid for the groceries in cash, but she preferred card.|Dia membayar belanjaan dengan uang tunai, tetapi dia lebih memilih kartu.
+Credit|Kredit|Do not use your credit card too much, or you will face debt.|Jangan terlalu sering menggunakan kartu kreditmu, atau kamu akan menghadapi utang.
+Debit|Debit|She used her debit card for shopping, and the transaction was fast.|Dia menggunakan kartu debitnya untuk berbelanja, dan transaksinya cepat.
+Bank|Bank|The bank opens at eight, but the queue is already very long.|Bank buka jam delapan, tetapi antreannya sudah sangat panjang.
+Cashier|Kasir|The cashier scanned the items, and she gave me the receipt.|Kasir memindai barang-barang, dan dia memberi saya nota.
+Receipt|Nota|Keep your purchase receipt, for you might need it to return items.|Simpan nota pembelianmu, karena kamu mungkin membutuhkannya untuk mengembalikan barang.
+Wallet|Dompet|He lost his leather wallet, so he blocked his debit cards.|Dia kehilangan dompet kulitnya, jadi dia memblokir kartu debitnya.
+Account|Akun|You must protect your bank account, or hackers will steal money.|Kamu harus melindungi akun bankmu, atau peretas akan mencuri uang.
+Secure|Aman|The digital transaction was secure, and we received a message.|Transaksi digital itu aman, dan kami menerima pesan.
+Scam|Penipuan|The online offer was a financial scam, so do not trust it.|Penawaran daring itu adalah penipuan finansial, jadi jangan mempercayainya.
+Invest|Berinvestasi|She wanted to invest in gold, but she did not have enough money.|Dia ingin berinvestasi emas, tetapi dia tidak memiliki cukup uang.
+Save|Menabung|Save your money in the bank, or keep it in a safe box at home.|Tabung uangmu di bank, atau simpan di kotak aman di rumah.
+Income|Pendapatan|My sister got a new job, and her monthly income is very high.|Kakak saya mendapatkan pekerjaan baru, dan pendapatan bulanannya sangat tinggi.
+Expense|Pengeluaran|Keep track of your daily expenses, so you can save more money.|Pantau pengeluaran harianmu, agar kamu bisa menabung lebih banyak uang.
+Salary|Gaji|The company raised his salary, and he felt highly motivated.|Perusahaan menaikkan gajinya, dan dia merasa sangat termotivasi.
+Wage|Upah harian|The workers received their weekly wages, and they went home.|Para pekerja menerima upah mingguan mereka, dan mereka pulang.
+Bonus|Bonus|The boss gave us a holiday bonus, so we bought new clothes.|Bos memberi kami bonus liburan, jadi kami membeli baju baru.
+Price|Harga|The price of rice rose last week, yet the demand remained high.|Harga beras naik minggu lalu, namun permintaannya tetap tinggi.
+Cheap|Murah|The organic pineapples were very cheap, so she bought five.|Nanas organik sangat murah, jadi dia membeli lima buah.
+Expensive|Mahal|This laptop is too expensive, but I need it for my school.|Laptop ini terlalu mahal, tetapi saya membutuhkannya untuk sekolah saya.
+Bargain|Menawar|My mother bargained at the market, and she got a lower price.|Ibu saya menawar di pasar, dan dia mendapatkan harga yang lebih rendah.
+Discount|Diskon|The store offered a massive discount, and many customers came.|Toko menawarkan diskon besar-besaran, dan banyak pelanggan datang.
+Coin|Koin|He found some old silver coins, and he kept them in a box.|Dia menemukan beberapa koin perak tua, dan dia menyimpannya di dalam kotak.
+Bill|Tagihan|Please pay the electricity bill, or the power will be cut.|Tolong bayar tagihan listrik, atau aliran listrik akan diputus.
+Change|Kembalian|The shopkeeper gave me the change, and she smiled warmly.|Penjual memberikan uang kembalian, dan dia tersenyum hangat.
+Receipt|Kuitansi|Please sign the official receipt, and wait for confirmation.|Tolong tanda tangani kuitansi resmi, dan tunggu konfirmasi.
+Market|Pasar|The traditional market is busy, but the supermarket is quiet.|Pasar tradisional itu sibuk, tetapi supermarketnya sepi.
+Store|Toko|The grocery store was closed today, so we went to the market.|Toko kelontong ditutup hari ini, jadi kami pergi ke pasar.
+Customer|Pelanggan|The store serves customers well, so many people love to visit.|Toko melayani pelanggan dengan baik, jadi banyak orang suka berkunjung.
+Profit|Keuntungan|We calculated the weekly profit, and we were very happy.|Kami menghitung keuntungan mingguan, dan kami sangat senang.
+Loss|Kerugian|The company suffered a loss, so they cut their marketing budget.|Perusahaan mengalami kerugian, jadi mereka memotong anggaran pemasaran.
+Finances|Keuangan|We must manage our personal finances well, or we will face debt.|Kita harus mengelola keuangan pribadi kita dengan baik, atau kita akan menghadapi utang.`,
+
+            unit12: `Follower|Pengikut|The creator gained millions of followers, but she kept her life private.|Kreator itu mendapatkan jutaan pengikut, tetapi dia menjaga privasi hidupnya.
+Algorithm|Algoritma|The social media algorithm shows videos based on interests, and this keeps users online.|Algoritma menampilkan video berdasarkan minat, dan ini membuat pengguna tetap daring.
+Hashtag|Tagar|You can use trending hashtags, or you can run paid advertisements.|Kamu bisa menggunakan tagar tren, atau kamu bisa menjalankan iklan berbayar.
+Post|Unggahan|He shared a post about conservation, and it went viral quickly.|He membagikan unggahan tentang konservasi, dan itu menjadi viral dengan cepat.
+Profile|Profil|She edited her online profile yesterday, and she got job offers today.|Dia mengedit profil daringnya kemarin, dan dia mendapat tawaran pekerjaan hari ini.
+Trending|Tren|The news about the blue lake is trending, so many tourists plan to visit.|Berita tentang danau biru sedang tren, jadi banyak turis berencana berkunjung.
+Account|Akun|Protect your account with a strong password, or hackers will steal it.|Lindungi akunmu dengan kata sandi kuat, atau peretas akan mencurinya.
+Platform|Platform|This platform offers free English classes, and many teenagers joined.|Platform ini menawarkan kelas bahasa Inggris gratis, dan banyak remaja bergabung.
+Comment|Komentar|He received positive comments on his art, so he felt very happy.|Dia menerima komentar positif pada karyanya, jadi dia merasa sangat senang.
+Share|Bagikan|You can save the photo of the sunset, or you can share it with friends.|Kamu bisa menyimpan foto matahari terbenam, atau kamu bisa membagikannya dengan teman.
+Message|Pesan|I received an online message, but I did not recognize the sender.|Saya menerima pesan daring, tetapi saya tidak mengenali pengirimnya.
+Chat|Obrolan|They had an online chat, and they discussed the school project.|Mereka melakukan obrolan daring, dan mereka membahas proyek sekolah.
+Video|Video|The teacher made an educational video, and she posted it online.|Guru membuat video pendidikan, dan dia mengirimkannya secara daring.
+Picture|Gambar|She took a beautiful picture, and she shared it on her feed.|Dia mengambil gambar yang indah, dan dia membagikannya di umpan medianya.
+Story|Cerita|He posted a daily story, but it disappeared after twenty-four hours.|Dia mengirimkan cerita harian, tetapi hilang setelah dua opini empat jam.
+Notifications|Notifikasi|Turn off your notifications, or they will distract you from studying.|Matikan notifikasimu, atau mereka akan mengalihkan perhatianmu dari belajar.
+Interact|Berinteraksi|Siswa can interact online, and they can share useful homework tips.|Siswa dapat berinteraksi secara daring, dan mereka dapat berbagi tips pekerjaan rumah yang berguna.
+Connectivity|Konektivitas|The connectivity was very weak, so the video was paused.|Konektivitasnya sangat lemah, sehingga videonya terhenti.
+Netizen|Netizen|Netizens gave positive feedback, and the local creator felt happy.|Netizen memberikan masukan positif, dan kreator lokal merasa senang.
+Influence|Pengaruh|Social media has a strong influence, so we must use it wisely.|Media sosial memiliki pengaruh yang kuat, jadi kita harus menggunakannya dengan bijak.
+Digital|Digital|Technology changes in this digital era, so adapt to it quickly.|Teknologi berubah di era digital ini, jadi beradaptasilah dengannya dengan cepat.
+Device|Perangkat|He bought a digital device, and he used it to join the class.|Dia membeli perangkat digital, dan dia menghubungkannya untuk mengikuti kelas.
+Interactive|Interaktif|The learning app was highly interactive, so students loved it.|Aplikasi pembelajaran itu sangat interaktif, jadi siswa menyukainya.
+Privacy|Privasi|Protect your online privacy, so never share personal details.|Lindungi privasi daringmu, jadi jangan pernah bagikan detail pribadi.
+Cyberbullying|Perundungan siber|Cyberbullying is dangerous, so schools must educate students.|Perundungan siber itu berbahaya, jadi sekolah harus mendidik siswa.
+Cybersecurity|Keamanan siber|We must study cybersecurity, for it protects our personal accounts.|Kita harus mempelajari keamanan siber, karena itu melindungi akun pribadi kita.
+Information|Informasi|The web has much false information, so always verify the sources.|Web memiliki banyak informasi palsu, jadi selalu verifikasi sumbernya.
+Fake|Palsu|The profile picture was fake, so she blocked the account.|Foto profil itu palsu, jadi dia memblokir akun tersebut.
+Hacker|Peretas|The hacker attacked the database, but the security blocked him.|Peretas menyerang database, tetapi keamanan memblokirnya.
+Virus|Virus|The laptop was infected by a virus, so it became extremely slow.|Laptop terinfeksi virus, sehingga menjadi sangat lambat.
+Download|Unduh|You can download the software, or you can use the web version.|Kamu bisa mengunduh perangkat lunaknya, atau kamu bisa menggunakan versi web.
+Upload|Unggah|He uploaded the report, and he sent the link to the teacher.|Dia mengunggah laporan, dan dia mengirimkan tautannya ke guru.
+Search|Cari|You can search for books online, or you can visit the library.|Kamu bisa mencari buku secara daring, atau kamu bisa mengunjungi perpustakaan.
+Browser|Peramban|Open your web browser, and type the address very carefully.|Buka peramban webmu, dan ketik alamatnya dengan sangat hati-hati.
+Screen|Layar|The screen was bright, so she adjusted the settings quickly.|Layarnya terang, jadi dia segera menyesuaikan pengaturannya.
+Keyboard|Papan ketik|The keyboard was dirty, so he cleaned it with a soft cloth.|Papan ketiknya kotor, jadi dia membersihkannya dengan kain lembut.
+Mouse|Tetikus|She bought a wireless mouse, and she connected it to her laptop.|Dia membeli tetikus nirkabel, dan dia menghubungkannya ke laptopnya.
+Laptop|Laptop|He used his laptop to study, and he did it for three hours.|Dia menggunakan laptopnya untuk belajar, dan dia melakukannya selama tiga jam.
+Smartphone|Ponsel pintar|She checked her smartphone, but she did not see any alerts.|Dia memeriksa ponsel pintarnya, tetapi dia tidak melihat adanya peringatan.
+Tablet|Tablet|He used a tablet to draw, so his sketches looked very clean.|Dia menggunakan tablet untuk menggambar, jadi sketsanya terlihat sangat bersih.
+App|Aplikasi|Download the app, and secure your account with a password.|Unduh aplikasinya, dan amankan akunmu dengan kata sandi.
+Update|Pembaruan|The app needs an update, or some features will not function.|Aplikasi membutuhkan pembaruan, atau beberapa fitur tidak akan berfungsi.
+Settings|Pengaturan|Open the settings menu, and change your password immediately.|Buka menu pengaturan, dan segera ubah kata sandimu.
+Connection|Koneksi|The connection was lost, so we had to restart our router.|Koneksinya terputus, jadi kami harus menyalakan ulang router kami.
+Online|Daring|They study online, and they do their exams on the computer.|Mereka belajar daring, dan mereka melakukan ujian di komputer.
+Offline|Luring|The internet was down, so we did offline exercises instead.|Internet mati, jadi kami melakukan latihan luring sebagai gantinya.
+Website|Situs web|He made a website, and he shared historical stories on it.|Dia membuat situs web, dan dia membagikan cerita sejarah di dalamnya.
+Network|Jaringan|The network was unstable, but the online test went well.|Jaringannya tidak stabil, tetapi ujian daring berjalan lancar.
+Password|Kata sandi|Do not share your password, or hackers will steal your data.|Jangan bagikan kata sandimu, atau peretas akan mencuri datamu.
+Virtual|Virtual|They held a virtual conference, and they made great plans.|Mereka mengadakan konferensi virtual, dan mereka membuat rencana besar.`,
+
+            unit13: `Solar|Surya|The government installed solar panels, and this reduced electricity bills.|Pemerintah memasang panel surya, dan ini mengurangi tagihan listrik.
+Turbine|Turbin|Wind turbines were built along the coast, and they produce clean energy.|Turbin angin dibangun di sepanjang pantai, dan mereka menghasilkan energi bersih.
+Hydroelectric|Hidroelektrik|Engineers built a hydroelectric dam, but some farmers protested.|Insinyur membangun bendungan hidroelektrik, tetapi beberapa petani memprotes.
+Geothermal|Geotermal|Our country has volcanic resources, so geothermal energy is developed.|Negara kita kaya akan sumber daya gunung berapi, sehingga energi geotermal dikembangkan.
+Electricity|Listrik|The storm destroyed power lines, so the town was without electricity.|Badai menghancurkan jalur listrik, sehingga kota itu tanpa listrik.
+Generator|Generator|The school bought a backup generator, for they wanted to avoid blackouts.|Sekolah membeli generator cadangan, karena mereka ingin menghindari pemadaman.
+Biofuel|Bahan Bakar Nabati|Scientists developed organic biofuel, and they tested it on public buses.|Ilmuwan mengembangkan bahan bakar nabati organik, dan mereka mengujinya pada bus umum.
+Grid|Jaringan Listrik|Solar power was connected to the grid, so many houses received clean energy.|Tenaga surya dihubungkan ke jaringan listrik, sehingga banyak rumah menerima energi bersih.
+Conservation|Konservasi|Energy conservation is very important, so turn off lamps during the day.|Konservasi energi sangat penting, jadi matikan lampu di siang hari.
+Efficient|Efisien|Modern LED lamps are highly efficient, and they consume very little power.|Lampu LED modern sangat efisien, dan mengonsumsi sangat sedikit daya.
+Energy|Energi|We need clean energy, so we must develop solar power plants.|Kita butuh energi bersih, jadi kita harus mengembangkan pembangkit listrik tenaga surya.
+Panel|Panel|The solar panels were dusty, so we cleaned them carefully.|Panel surya itu berdebu, jadi kami membersihkannya dengan hati-hati.
+Wind|Angin|The wind was very strong, so the giant turbines spun fast.|Angin sangat kencang, sehingga turbin raksasa berputar cepat.
+Dam|Bendungan|They built a huge water dam, and it provides electricity to the city.|Mereka membangun bendungan air besar, dan itu menyediakan listrik ke kota.
+Volcano|Gunung berapi|The island has active volcanoes, so geothermal potential is high.|Pulau ini memiliki gunung berapi aktif, sehingga potensi geotermalnya tinggi.
+Power|Tenaga|The solar station generates green power, and it protects nature.|Stasiun surya menghasilkan tenaga hijau, dan itu melindungi alam.
+Light|Cahaya|Solar cells absorb morning light, and they convert it to electricity.|Sel surya menyerap cahaya pagi, dan mereka mengubahnya menjadi listrik.
+Battery|Baterai|Store the excess energy in a battery, or use it immediately.|Simpan energi berlebih di baterai, atau gunakan segera.
+Charge|Mengisi daya|He charged his electric car, and the process took one hour.|Dia mengisi daya mobil listriknya, dan prosesnya memakan waktu satu jam.
+Clean|Bersih|Renewable energy is clean, but fossil fuels cause heavy pollution.|Energi terbarukan itu bersih, tetapi bahan bakar fosil menyebabkan polusi berat.
+Fossil|Fosil|Fossil fuels will run out, so we must find alternative energy.|Bahan bakar fosil akan habis, jadi kita harus mencari energi alternatif.
+Coal|Batu bara|The plant burned dirty coal, so the local air became polluted.|Pembangkit membakar batu bara kotor, sehingga udara setempat menjadi tercemar.
+Oil|Minyak|Oil drilling causes ocean pollution, yet many countries still do it.|Pengeboran minyak menyebabkan polusi samudra, namun banyak negara tetap melakukannya.
+Gas|Gas|We use natural gas for cooking, and it is cleaner than coal.|Kita menggunakan gas alam untuk memasak, dan ini lebih bersih daripada batu bara.
+Alternative|Alternatif|Scientists search for alternative resources, so they test biomass.|Para ilmuwan mencari sumber daya alternatif, jadi mereka menguji biomassa.
+Biomass|Biomassa|Biomass uses organic waste, and it generates clean electricity.|Biomassa menggunakan limbah organik, dan itu menghasilkan listrik bersih.
+Nuclear|Nuklir|Nuclear energy is very powerful, but it has high safety risks.|Energi nuklir sangat kuat, tetapi memiliki risiko keamanan yang tinggi.
+Reactor|Reaktor|The nuclear reactor was secured, and technicians monitored it daily.|Reaktor nuklir itu diamankan, dan para teknisi memantaunya setiap hari.
+Radiation|Radiasi|The waste releases dangerous radiation, so we must bury it deep.|Limbah tersebut melepaskan radiasi berbahaya, jadi kita harus menguburnya dalam-dalam.
+Safety|Keamanan|The plant has strict safety rules, so accidents are very rare.|Pembangkit memiliki aturan keamanan yang ketat, jadi kecelakaan sangat jarang terjadi.
+Renewable|Terbarukan|Wind is a renewable source, and it will never run out.|Angin adalah sumber terbarukan, dan tidak akan pernah habis.
+Green|Hijau|We should build green cities, so let us plant trees on roofs.|Kita harus membangun kota hijau, jadi mari kita menanam pohon di atap.
+Tech|Teknologi|Solar technology improved, and panels became much cheaper now.|Teknologi surya membaik, dan panel menjadi jauh lebih murah sekarang.
+Efficiency|Efisiensi|The new generator has high efficiency, so it saves fuel.|Generator baru memiliki efisiensi tinggi, jadi menghemat bahan bakar.
+Engine|Mesin|The electric engine is silent, and it does not emit toxic smoke.|Mesin listrik itu senyap, dan tidak mengeluarkan asap beracun.
+Vehicle|Kendaraan|He bought an electric vehicle, so he stopped buying gasoline.|Dia membeli kendaraan listrik, jadi dia berhenti membeli bensin.
+Gasoline|Bensin|Gasoline prices rose yesterday, yet roads remained crowded.|Harga bensin naik kemarin, namun jalanan tetap ramai.
+Consumer|Konsumen|Consumers prefer efficient appliances, for they save monthly money.|Konsumen lebih memilih peralatan yang efisien, karena menghemat uang bulanan.
+Save|Menghemat|Turn off the television, and you will save more electricity.|Matikan television, dan kamu akan menghemat lebih banyak listrik.
+Bill|Tagihan|Our monthly bill was very high, so we started conserving energy.|Tagihan bulanan kami sangat tinggi, jadi kami mulai menghemat energi.
+Lamp|Lampu|She turned off the desk lamp, and she went to sleep.|Dia mematikan lampu meja, dan dia pergi tidur.
+Bulb|Bohlam|He replaced the old bulb, and he installed an efficient LED.|Dia mengganti bohlam lama, dan dia memasang LED yang efisien.
+Plug|Colokan|Remove the phone plug, or it will consume standby power.|Cabut colokan ponsel, atau itu akan mengonsumsi daya siaga.
+Socket|Stopkontak|The wall socket was broken, so he called an electrician.|Stopkontak dinding rusak, jadi dia memanggil tukang listrik.
+Electrician|Tukang listrik|The electrician fixed the lines, and the lights turned on.|Tukang listrik memperbaiki jalur listrik, dan lampu pun menyala.
+Resource|Sumber daya|Water is a vital resource, so do not waste it daily.|Air adalah sumber daya vital, jadi jangan membuangnya setiap hari.
+Supply|Pasokan|The coal supply was low, but the power station kept working.|Pasokan batu bara rendah, tetapi stasiun pembangkit tetap bekerja.
+Demand|Permintaan|Electricity demand rises in summer, so generators run fully.|Permintaan listrik meningkat di musim panas, jadi generator berjalan penuh.
+Blackout|Pemadaman|The storm caused a blackout, and the whole city was dark.|Badai menyebabkan pemadaman, dan seluruh kota menjadi gelap.
+Power plant|Pembangkit listrik|The local power plant is modern, and it uses geothermal energy.|Pembangkit listrik lokal itu modern, dan menggunakan energi geotermal.`,
+
+            unit14: `Cashless|Non-tunai|Many modern shops accept cashless payments, so you should install a digital wallet.|Banyak toko modern menerima pembayaran non-tunai, jadi kamu harus memasang dompet digital.
+Wallet|Dompet|The student forgot her physical wallet, but she paid using her phone.|Siswa itu lupa dompet fisiknya, tetapi dia membayar menggunakan ponselnya.
+Barcode|Barcode|The cashier scanned the barcode, and the payment was completed quickly.|Kasir memindai barcode, dan pembayaran diselesaikan dengan cepat.
+Transaction|Transaksi|The transaction was processed securely, and the bank sent a receipt.|Transaksi diproses dengan aman, dan bank mengirimkan nota.
+Discount|Diskon|The store offers a discount for digital payments, so many shop online.|Toko menawarkan diskon untuk pembayaran digital, jadi banyak yang berbelanja daring.
+Account|Akun|Monitor your bank account regularly, or you will not notice suspicious actions.|Pantau akun bankmu secara teratur, atau kamu tidak akan menyadari tindakan mencurigakan.
+E-commerce|E-commerce|E-commerce makes shopping convenient, yet we must be careful of scams.|E-commerce membuat belanja nyaman, namun kita harus berhati-hati terhadap penipuan.
+Transfer|Transfer|My father transferred some money, and I received it within a minute.|Ayah saya mentransfer sejumlah uang, dan saya menerimanya dalam satu menit.
+Balance|Saldo|She checked her digital wallet balance, but she did not have enough money.|Dia memeriksa saldo dompet digitalnya, tetapi dia tidak memiliki cukup uang.
+Card|Kartu|You can pay using a debit card, or you can scan the quick response code.|Kamu bisa membayar menggunakan kartu debit, atau kamu bisa memandai kode respon cepat.
+Cash|Uang tunai|The market only accepts cash, so we must find an ATM first.|Pasar hanya menerima uang tunai, jadi kita harus mencari ATM terlebih dahulu.
+ATM|Mesin ATM|He wanted to withdraw some cash, so he walked to the nearest ATM.|Dia ingin menarik uang tunai, jadi dia berjalan ATM terdekat.
+Withdraw|Menarik uang|She withdrew fifty thousand rupiahs, and she bought a school notebook.|Dia menarik lima puluh ribu rupiah, dan dia membeli buku catatan sekolah.
+Deposit|Menyetor|My mother deposited her savings, and she felt very secure.|Ibu saya menyetor tabungannya, dan dia merasa sangat aman.
+Savings|Tabungan|He puts his money in a savings account, so he can buy a laptop.|Dia menaruh uangnya di akun tabungan, jadi dia bisa membeli laptop.
+Interest|Bunga|The bank offers low interest rates, yet many people save money.|Bank menawarkan suku bunga rendah, namun banyak orang menyimpan uang.
+Loan|Pinjaman|He applied for a bank loan, but his request was rejected.|Dia mengajukan pinjaman bank, tetapi permintaannya ditolak.
+Debt|Utang|Do not borrow money for luxury items, or you will fall into debt.|Jangan meminjam uang untuk barang mewah, atau kamu akan terlilit utang.
+Credit|Kredit|She paid the bill using credit, but she had to pay interest.|Dia membayar tagihan menggunakan kredit, tetapi dia harus membayar bunga.
+Debit|Debit|He scanned his debit card, and the machine processed it quickly.|Dia memindai kartu debitnya, dan mesin memprosesnya dengan cepat.
+PIN|Nomor PIN|Keep your bank PIN secret, or someone will access your money.|Jaga kerahasiaan PIN bankmu, atau seseorang akan mengakses uangmu.
+Password|Kata sandi|Use a strong account password, and do not share it with friends.|Gunakan kata sandi akun yang kuat, dan jangan bagikannya dengan teman.
+Security|Keamanan|Digital security is vital, so banks use advanced software.|Keamanan digital sangat penting, jadi bank menggunakan perangkat lunak canggih.
+App|Aplikasi|The mobile banking app is useful, and the interface is simple.|Aplikasi perbankan seluler sangat berguna, dan antarmukanya sederhana.
+Settings|Pengaturan|Open the app settings, and activate the biometric lock now.|Buka pengaturan aplikasi, dan aktifkan kunci biometrik sekarang.
+Notification|Notifikasi|He received a transaction notification, and he checked his balance.|Dia menerima notifikasi transaksi, dan dia memeriksa saldonya.
+Scam|Penipuan|The investment plan was a financial scam, so do not join.|Rencana investasi itu adalah penipuan finansial, jadi jangan ikut.
+Phishing|Phishing|Phishing is a dangerous cyber crime, so protect your passwords.|Phishing adalah kejahatan siber yang berbahaya, jadi lindungi kata sandimu.
+Hack|Meretas|The hacker tried to hack the system, but the bank blocked him.|Peretas mencoba meretas sistem, tetapi bank memblokirnya.
+Data|Data|They protected the customer data, and they backed it up safely.|Mereka melindungi data pelanggan, dan mereka mencadangkannya dengan aman.
+Invoice|Faktur|The online seller sent an invoice, and she paid it immediately.|Penjual daring mengirimkan faktur, dan dia segera membayarnya.
+Payment|Pembayaran|The digital payment was successful, so the store shipped the items.|Pembayaran digital berhasil, jadi toko mengirimkan barang-barang tersebut.
+Receipt|Kuitansi|The cashier printed the receipt, and he handed it to me.|Kasir mencetak kuitansi, dan dia menyerahkannya kepada saya.
+Cashier|Kasir|The cashier scanned the barcode, and she smiled at the customer.|Kasir memindai barcode, dan dia tersenyum kepada pelanggan.
+Merchant|Penjual|The local merchant accepted digital wallets, so shopping was easy.|Penjual lokal menerima dompet digital, jadi berbelanja menjadi mudah.
+Buyer|Pembeli|The buyer chose some fresh apples, and he paid with his card.|Pembeli memilih beberapa apel segar, dan dia membayar dengan kartunya.
+Store|Toko|The online store offers free shipping, so many people buy there.|Toko daring menawarkan pengiriman gratis, jadi banyak orang membeli di sana.
+Customer|Pelanggan|The store serves customers well, so they always come back.|Toko melayani pelanggan dengan baik, jadi mereka selalu kembali.
+Profit|Keuntungan|We calculated our weekly profit, and we were highly satisfied.|Kami menghitung keuntungan mingguan kami, dan kami sangat puas.
+Loss|Kerugian|The small shop suffered a financial loss, so they closed early.|Toko kecil itu mengalami kerugian finansial, sehingga mereka tutup lebih awal.
+Tax|Pajak|We pay taxes on our purchases, and the money builds public parks.|Kita membayar pajak atas pembelian kita, dan uangnya membangun taman umum.
+Bill|Tagihan|Please pay the internet bill, or the network will be cut.|Tolong bayar tagihan internet, atau jaringannya akan diputus.
+Currency|Mata uang|The value of our currency fell, yet the prices remained stable.|Nilai mata uang kami turun, namun harganya tetap stabil.
+Inflation|Inflasi|The country is facing inflation, so daily food gets expensive.|Negara sedang menghadapi inflasi, jadi makanan harian menjadi mahal.
+Income|Pendapatan|Her monthly income was stable, so she bought a small house.|Pendapatan bulanannya stabil, jadi dia memutuskan untuk membeli rumah.
+Expenses|Pengeluaran|Track your daily expenses, so you can save more money.|Pantau pengeluaran harianmu, agar kamu bisa menabung lebih banyak uang.
+Salary|Gaji|The company raised his salary, and he felt very motivated.|Perusahaan menaikkan gajinya, dan dia merasa sangat termotivasi.
+Wage|Upah harian|The bricklayers received their daily wages, and they felt happy.|Para tukang batu menerima upah harian mereka, dan mereka merasa senang.
+Bonus|Bonus|The boss gave a year-end bonus, so we bought holiday gifts.|Bos memberikan bonus akhir tahun, jadi kami membeli hadiah liburan.
+Finances|Keuangan|Manage your personal finances, or you will fall into major debt.|Kelola keuangan pribadimu, atau kamu akan terlilit utang besar.`,
+
+            unit15: `Profession|Profesi|Software engineering is a demanding profession, and it offers great opportunities.|Rekayasa perangkat lunak adalah profesi yang menuntut, dan menawarkan peluang besar.
+Skill|Keterampilan|You can learn coding skills from online courses, or you can join a school.|Kamu bisa mempelajari keterampilan pengodean dari kursus daring, atau kamu bisa masuk sekolah.
+Internship|Magang|The student applied for an internship, and she was successfully accepted.|Siswa itu melamar magang, dan dia berhasil diterima.
+Salary|Gaji|The company offers a high salary, but you must work under strict deadlines.|Perusahaan menawarkan gaji tinggi, tetapi kamu harus bekerja di bawah tenggat waktu yang ketat.
+Resume|Resume|Write your achievements in your resume, so recruiters can see your talents.|Tuliskan pencapaianmu di resume, agar perekrut bisa melihat bakatmu.
+Interview|Wawancara|The job interview was quite challenging, yet the candidate remained calm.|Wawancara kerja itu cukup menantang, namun kandidat tetap tenang.
+Entrepreneur|Wirausahawan|He did not want to work in an office, so he became an entrepreneur.|He tidak ingin bekerja di kantor, jadi dia menjadi seorang wirausahawan.
+Freelancer|Pekerja Lepas|Working as a freelancer offers flexibility, but you must manage your time.|Bekerja sebagai pekerja lepas menawarkan fleksibilitas, tetapi kamu harus mengatur waktumu.
+Marketing|Pemasaran|The shop wanted to increase sales, so they hired a marketing team.|Toko ingin meningkatkan penjualan, jadi mereka mempekerjakan tim pemasaran.
+Project|Proyek|The team worked together on the web project, and they finished it yesterday.|Tim bekerja sama dalam proyek web, dan mereka menyelesaikannya kemarin.
+Profession|Profesi|Teaching is a noble profession, and it shapes the future generation.|Mengajar adalah profesi yang mulia, dan itu membentuk generasi masa depan.
+Career|Karir|He plans a career in technology, so he studies computer science.|Dia merencanakan karir di bidang teknologi, jadi dia mempelajari ilmu komputer.
+Applicant|Pelamar|There were fifty job applicants, but only three were selected.|Ada lima puluh pelamar kerja, tetapi hanya tiga yang terpilih.
+Recruiter|Perekrut|The recruiter checked his portfolio, and she was very impressed.|Perekrut memeriksa portofolionya, dan dia sangat terkesan.
+Manager|Manajer|The office manager was friendly, so the staff worked happily.|Manajer kantor itu ramah, sehingga staf bekerja dengan gembira.
+Staff|Staf|The store has a professional staff, and they serve customers well.|Toko memiliki staf profesional, dan mereka melayani pelanggan dengan baik.
+Employee|Karyawan|The company valued its employees, so they gave them monthly bonuses.|Perusahaan menghargai karyawannya, jadi mereka memberi mereka bonus bulanan.
+Employer|Pemberi kerja|A good employer listens to the staff, and she provides facilities.|Pemberi kerja yang baik mendengarkan staf, dan dia menyediakan fasilitas.
+Vacancy|Lowongan|There was a job vacancy at the bank, so he applied immediately.|Ada lowongan kerja di bank, jadi dia segera melamar.
+Employment|Pekerjaan|Digital skills increase employment chances, so we must learn coding.|Keterampilan digital meningkatkan peluang kerja, jadi kita harus belajar coding.
+Skill|Keahlian|Coding is a highly useful tech skill, and it is demanded today.|Coding adalah keahlian teknologi yang sangat berguna, dan itu dituntut hari ini.
+Certificate|Sertifikat|He received a digital certificate, and he put it on his resume.|Dia menerima sertifikat digital, dan dia mencantumkannya di resume-nya.
+Portfolio|Portofolio|Show your creative design portfolio, or you will not get the job.|Tunjukkan portofolio desain kreatifmu, atau kamu tidak akan mendapatkan pekerjaan.
+Application|Lamaran|She sent her job application, and she waited for the confirmation.|Dia mengirimkan lamaran kerjanya, dan dia menunggu konfirmasi.
+Hire|Mempekerjakan|The agency wanted to hire a graphic designer, so they held tests.|Agensi ingin mempekerjakan desainer grafis, jadi mereka mengadakan ujian.
+Fire|Memecat|The lazy worker was fired yesterday, so he felt very sad today.|Pekerja malas itu dipecat kemarin, jadi dia merasa sangat sedih hari ini.
+Retire|Pensiun|My grandfather retired last year, and he now lives in the village.|Kakek saya pensiun tahun lalu, dan dia sekarang tinggal di desa.
+Pension|Pensiun|Retired workers receive a monthly pension, so they live peacefully.|Pekerja yang pensiun menerima uang pensiun bulanan, jadi mereka hidup dengan damai.
+Office|Kantor|The modern office was spacious, and it had high connectivity.|Kantor modern itu luas, dan memiliki konektivitas yang tinggi.
+Company|Perusahaan|The tech company grew fast, and they hired many young freelancers.|Perusahaan teknologi itu berkembang cepat, dan mereka mempekerjakan banyak pekerja lepas muda.
+Agency|Agensi|She works for a marketing agency, but she plans to start her own.|Dia bekerja di agensi pemasaran, tetapi dia berencana memulai usahanya sendiri.
+Business|Bisnis|The business was successful, so they expanded to other cities.|Bisnisnya sukses, jadi mereka berekspansi ke kota-kota lain.
+Industry|Industri|The tourism industry is growing, and it creates many local jobs.|Industri pariwisata sedang berkembang, dan ini menciptakan banyak pekerjaan lokal.
+Corporation|Korporasi|He works for a multinational corporation, but he dislikes the routine.|Dia bekerja untuk korporasi multinasional, tetapi dia tidak menyukai rutinitasnya.
+Deadline|Tenggat waktu|The project deadline was very tight, yet they completed it on time.|Tenggat waktu proyek sangat ketat, namun mereka menyelesaikannya tepat waktu.
+Task|Tugas|The manager gave him a difficult task, but he did it successfully.|Manajer memberinya tugas yang sulit, tetapi dia melakukannya dengan sukses.
+Meeting|Rapat|They held a remote business meeting, and they made great plans.|Mereka mengadakan rapat bisnis jarak jauh, dan mereka membuat rencana besar.
+Conference|Konferensi|She attended an international conference, and she gave a speech.|Dia menghadiri konferensi internasional, dan dia memberikan pidato.
+Speech|Pidato|The president gave an inspiring speech, and the staff clapped.|Presiden memberikan pidato yang menginspirasi, dan staf bertepuk tangan.
+Promote|Mempromosikan|The director promoted her last week, so her salary increased.|Direktur mempromosikannya minggu lalu, sehingga gajinya meningkat.
+Promotion|Promosi|He worked hard to get a job promotion, and he got it today.|Dia bekerja keras untuk mendapatkan promosi jabatan, dan dia mendapatkannya hari ini.
+Resign|Mengundurkan diri|The manager resigned last month, so the company hired a new one.|Manajer mengundurkan diri bulan lalu, jadi perusahaan mempekerjakan yang baru.
+Contract|Kontrak|She signed a two year working contract, and she felt very secure.|Dia menandatangani kontrak kerja dua tahun, dan dia merasa sangat aman.
+Agreement|Persetujuan|The two companies signed an agreement, and they started the project.|Kedua perusahaan menandatangani persetujuan, dan mereka memulai proyek.
+Salary|Gaji bulanan|My sister received her monthly salary, and she bought me a gift.|Kakak saya menerima gaji bulanannya, dan dia membelikan saya hadiah.
+Wage|Upah|The construction workers received their weekly wages, and they went home.|Para pekerja konstruksi menerima upah mingguan mereka, dan mereka pulang.
+Bonus|Bonus|The company gave a performance bonus, so the employees felt happy.|Perusahaan memberikan bonus kinerja, sehingga para karyawan merasa senang.
+Profit|Keuntungan|Our business generated a high profit, so we raised staff salaries.|Bisnis kami menghasilkan keuntungan tinggi, jadi kami menaikkan gaji staf.
+Management|Manajemen|The company has a very poor management, so many employees resigned.|Perusahaan memiliki manajemen yang sangat buruk, sehingga banyak karyawan mengundurkan diri.
+Experience|Pengalaman|He has five years of working experience, so he got hired easily.|Dia memiliki lima tahun pengalaman kerja, jadi dia diterima bekerja dengan mudah.`
+        };
+
+        // Parse Data dynamically
+        function getCategoryData(id) {
+            const raw = rawData[id];
+            if (!raw) return [];
+            return raw.trim().split('\n').map(line => {
+                const parts = line.split('|');
+                return {
+                    word: parts[0]?.trim() || '',
+                    wordIndo: parts[1]?.trim() || '',
+                    sentence: parts[2]?.trim() || '',
+                    sentenceIndo: parts[3]?.trim() || ''
+                };
+            });
+        }
+
+        const synth = window.speechSynthesis;
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        let recognition = null;
+
+        if (SpeechRecognition) {
+            recognition = new SpeechRecognition();
+            recognition.continuous = false;
+            recognition.interimResults = false;
+            recognition.lang = 'en-GB';
+
+            recognition.onstart = () => { state.isListening = true; updateMicUI(); };
+            recognition.onend = () => { state.isListening = false; updateMicUI(); };
+            
+            recognition.onresult = (event) => {
+                const transcript = event.results[0][0].transcript.toLowerCase().trim();
+                const target = state.currentTarget.toLowerCase().trim();
+                
+                const cleanT = transcript.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+                const cleanTarget = target.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+
+                const isExact = cleanT === cleanTarget;
+                const isContained = cleanT.includes(cleanTarget) || cleanTarget.includes(cleanT);
+                const similarity = calculateSimilarity(cleanT, cleanTarget);
+
+                if (isExact || isContained || similarity > 0.60) {
+                    handleSuccess();
+                } else {
+                    showToast(`Heard: "${transcript}" - Try again!`, "bg-slate-700");
+                    const retryMsg = new SpeechSynthesisUtterance("Try again");
+                    if (state.britishVoice) retryMsg.voice = state.britishVoice;
+                    synth.speak(retryMsg);
+                }
+            };
+        }
+
+        function calculateSimilarity(s1, s2) {
+            let longer = s1, shorter = s2;
+            if (s1.length < s2.length) { longer = s2; shorter = s1; }
+            let longerLength = longer.length;
+            if (longerLength === 0) return 1.0;
+            return (longerLength - editDistance(longer, shorter)) / parseFloat(longerLength);
+        }
+
+        function editDistance(s1, s2) {
+            let costs = new Array();
+            for (let i = 0; i <= s1.length; i++) {
+                let lastValue = i;
+                for (let j = 0; j <= s2.length; j++) {
+                    if (i == 0) costs[j] = j;
+                    else if (j > 0) {
+                        let newValue = costs[j - 1];
+                        if (s1.charAt(i - 1) != s2.charAt(j - 1))
+                            newValue = Math.min(Math.min(newValue, lastValue), costs[j]) + 1;
+                        costs[j - 1] = lastValue;
+                        lastValue = newValue;
+                    }
+                }
+                if (i > 0) costs[s2.length] = lastValue;
+            }
+            return costs[s2.length];
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('game-grid');
+            grid.innerHTML = categories.map((cat, index) => {
+                const isUnlocked = state.unlockedCategoryIds.includes(cat.id);
+                const isCompleted = state.completedCategories.includes(cat.id);
+                
+                const cardClass = isUnlocked 
+                    ? `game-card unlocked glass-card p-4 rounded-[2rem] flex flex-col items-center text-center group`
+                    : `glass-card p-4 rounded-[2rem] flex flex-col items-center text-center opacity-50 cursor-not-allowed filter grayscale`;
+                const icon = isUnlocked ? cat.icon : 'lock';
+                const colorClass = isUnlocked ? cat.color : 'bg-slate-600';
+                
+                // Tambahkan tanda centang jika kategori ini sudah pernah diselesaikan
+                const checkmark = isCompleted ? `<i data-lucide="check-circle-2" class="inline-block w-4 h-4 ml-1 text-emerald-400"></i>` : '';
+
+                return `
+                <div class="${cardClass}" ${isUnlocked ? `onclick="startLesson(${index})"` : `onclick="showToast('Selesaikan kategori yang terbuka untuk membuka rahasia!', 'bg-red-500')"`}>
+                    <div class="w-14 h-14 ${colorClass} rounded-2xl flex items-center justify-center mb-3 shadow-lg ${isUnlocked ? 'group-hover:scale-110 transition-transform' : ''}">
+                        <i data-lucide="${icon}" class="w-6 h-6 text-white"></i>
+                    </div>
+                    <h3 class="text-xs font-bold text-white mb-1 flex items-center justify-center">${cat.title} ${checkmark}</h3>
+                    <p class="text-slate-400 text-[10px]">${isUnlocked ? '10 Kosakata' : 'Terkunci'}</p>
+                </div>
+            `}).join('');
+            lucide.createIcons();
+        }
+
+        // GLOBAL TIMER FUNCTIONS
+        function startGlobalTimer() {
+            clearInterval(state.timerInterval);
+            document.getElementById('global-timer-display').classList.remove('hidden');
+            
+            state.timerInterval = setInterval(() => {
+                const endTimeStr = localStorage.getItem('speakup_timer_end');
+                if (!endTimeStr) return;
+                
+                const endTime = parseInt(endTimeStr);
+                const timeLeft = Math.max(0, Math.floor((endTime - Date.now()) / 1000));
+                
+                updateTimerDisplay(timeLeft);
+                
+                if (timeLeft <= 0) {
+                    clearInterval(state.timerInterval);
+                    handleGlobalTimeUp();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay(seconds) {
+            const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+            const s = (seconds % 60).toString().padStart(2, '0');
+            const display = document.getElementById('timer-text');
+            if (display) display.innerText = `${m}:${s}`;
+        }
+
+        function handleGlobalTimeUp() {
+            synth.cancel();
+            if(recognition) recognition.stop();
+            showToast("Waktu Pemanasan Habis!", "bg-rose-500");
+            
+            // Pengiriman ke Google Sheets dilakukan HANYA SEKARANG di akhir 15 menit
+            saveToGoogleSheets();
+
+            document.getElementById('final-session-score').innerText = state.totalXP;
+            document.getElementById('result-user-info').innerText = `${state.userName} | ${state.userClass}`;
+            document.getElementById('xp-label-text').innerText = "TOTAL XP YANG DIKUMPULKAN";
+            
+            const titleEl = document.getElementById('result-title');
+            const iconEl = document.getElementById('result-icon');
+            const iconContainer = document.getElementById('result-icon-container');
+
+            titleEl.innerText = "Pemanasan Selesai!";
+            iconEl.setAttribute('data-lucide', 'clock');
+            iconContainer.className = "w-24 h-24 bg-rose-500 rounded-full flex items-center justify-center mx-auto mb-8 shadow-xl";
+            
+            let actionsHtml = `<button onclick="logoutUser()" class="w-full py-4 bg-amber-500 text-white rounded-2xl font-black text-lg shadow-xl hover:bg-amber-400 transition-all btn-active flex items-center justify-center gap-2">Selesai (Ganti Akun) <i data-lucide="users" class="w-5 h-5"></i></button>`;
+            document.getElementById('result-actions').innerHTML = actionsHtml;
+            lucide.createIcons();
+
+            switchView('view-results');
+            document.getElementById('global-timer-display').classList.add('hidden');
+            document.getElementById('nav-controls').classList.add('hidden'); // Sembunyikan navigasi agar siswa tidak bisa kabur kembali ke beranda
+        }
+
+        // Helper untuk mendeteksi Jenjang Kelas (X, XI, XII atau 10, 11, 12)
+        function detectGradeLevel(kelasStr) {
+            if (!kelasStr) return 10; // Default fallback ke kelas X
+            const clean = kelasStr.toUpperCase().replace(/\s+/g, '');
+            
+            // Cek Kelas XII / 12
+            if (clean.includes('XII') || clean.includes('12')) {
+                return 12;
+            }
+            // Cek Kelas XI / 11
+            if (clean.includes('XI') || clean.includes('11')) {
+                return 11;
+            }
+            // Cek Kelas X / 10
+            if (clean.includes('X') || clean.includes('10')) {
+                return 10;
+            }
+            
+            return 10; // Default fallback
+        }
+
+        function loginUser() {
+            const nama = document.getElementById('input-nama').value.trim();
+            const kelas = document.getElementById('input-kelas').value.trim();
+
+            if (!nama || !kelas) {
+                showToast("Oops! Nama dan Kelas harus diisi.", "bg-red-500");
+                return;
+            }
+
+            // Dapatkan data siswa yang tersimpan sebelumnya
+            const savedName = localStorage.getItem('speakup_name') || '';
+            const savedClass = localStorage.getItem('speakup_class') || '';
+
+            // Jika siswa yang login SAMA dengan yang tersimpan sebelumnya, pulihkan progress belajarnya!
+            if (nama.toLowerCase() === savedName.toLowerCase() && kelas.toLowerCase() === savedClass.toLowerCase()) {
+                state.userName = savedName;
+                state.userClass = savedClass;
+                state.unlockedCategoryIds = getStoredArray('speakup_unlocked_ids', []);
+                state.completedCategories = getStoredArray('speakup_completed', []);
+                state.completedList = getStoredArray('speakup_session_completed_titles', []);
+                state.totalXP = parseInt(localStorage.getItem('speakup_xp')) || 0;
+                
+                showToast(`Selamat datang kembali, ${nama}! Melanjutkan pemanasan Anda.`, "bg-emerald-500");
+            } else {
+                // Jika ini siswa baru, bersihkan data lokal lama (reset progress)
+                localStorage.clear();
+                
+                state.userName = nama;
+                state.userClass = kelas;
+                state.completedCategories = [];
+                state.completedList = [];
+                state.totalXP = 0;
+                
+                localStorage.setItem('speakup_name', nama);
+                localStorage.setItem('speakup_class', kelas);
+                localStorage.setItem('speakup_xp', '0');
+
+                // Deteksi Tingkatan Kelas (10, 11, atau 12)
+                const grade = detectGradeLevel(kelas);
+                let firstUnlockId = '';
+
+                // Membuka SATU unit secara acak dari kelompok kelasnya di awal
+                if (grade === 10) {
+                    const classXPool = ['unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'unit6'];
+                    firstUnlockId = classXPool[Math.floor(Math.random() * classXPool.length)];
+                } else if (grade === 11) {
+                    const classXIPool = ['unit7', 'unit8', 'unit9', 'unit10', 'unit11'];
+                    firstUnlockId = classXIPool[Math.floor(Math.random() * classXIPool.length)];
+                } else if (grade === 12) {
+                    const classXIIPool = ['unit12', 'unit13', 'unit14', 'unit15'];
+                    firstUnlockId = classXIIPool[Math.floor(Math.random() * classXIIPool.length)];
+                }
+
+                // Hanya satu unit acak dari kelasnya yang terbuka di awal
+                state.unlockedCategoryIds = [firstUnlockId];
+                localStorage.setItem('speakup_unlocked_ids', JSON.stringify(state.unlockedCategoryIds));
+                
+                showToast(`Selamat datang, ${nama}! Kategori awal kelas Anda telah dibuka secara acak.`, "bg-emerald-500");
+            }
+
+            // Set judul tingkatan kelas di beranda
+            const currentGrade = detectGradeLevel(state.userClass);
+            document.getElementById('home-grade-title').innerText = `Kategori Belajar Kelas ${currentGrade === 10 ? 'X' : currentGrade === 11 ? 'XI' : 'XII'}`;
+
+            // Set Global Timer 15 Menit saat login (jika belum diset)
+            if (!localStorage.getItem('speakup_timer_end')) {
+                localStorage.setItem('speakup_timer_end', Date.now() + 15 * 60 * 1000);
+            }
+            
+            updateProfileUI();
+            renderGrid();
+            switchView('view-home');
+            startGlobalTimer();
+        }
+
+        // Custom Modal Logout trigger
+        function triggerLogoutConfirmation() {
+            document.getElementById('custom-confirm-modal').classList.remove('hidden');
+        }
+
+        function closeConfirmModal() {
+            document.getElementById('custom-confirm-modal').classList.add('hidden');
+        }
+
+        function confirmLogout() {
+            closeConfirmModal();
+            logoutUser();
+        }
+
+        function logoutUser() {
+            localStorage.clear(); // Bersihkan semua untuk profil siswa baru
+            clearInterval(state.timerInterval);
+            state.userName = '';
+            state.userClass = '';
+            state.totalXP = 0;
+            state.unlockedCategoryIds = [];
+            state.completedCategories = [];
+            state.completedList = [];
+            state.isManualMode = false;
+            
+            document.getElementById('input-nama').value = '';
+            document.getElementById('input-kelas').value = '';
+            document.getElementById('global-score').innerText = '0';
+            document.getElementById('global-timer-display').classList.add('hidden');
+            
+            renderGrid();
+            switchView('view-welcome');
+        }
+
+        function updateProfileUI() {
+            const profileDisplay = document.getElementById('user-profile-display');
+            if (state.userName) {
+                profileDisplay.innerText = `👋 Hai, ${state.userName} (${state.userClass})`;
+                profileDisplay.classList.remove('hidden');
+            } else {
+                profileDisplay.classList.add('hidden');
+            }
+        }
+
+        // Fungsi untuk mengacak urutan array
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function startLesson(index) {
+            const cat = categories[index];
+            if (!state.unlockedCategoryIds.includes(cat.id)) {
+                showToast("Kategori ini masih terkunci!", "bg-red-500");
+                return;
+            }
+            
+            state.currentGameIndex = index;
+            state.currentGame = { id: cat.id, title: cat.title };
+            
+            // Ambil semua data (50 item), acak urutannya, lalu ambil hanya 10 item secara acak!
+            let allData = getCategoryData(cat.id);
+            shuffleArray(allData);
+            state.rounds = allData.slice(0, 10);
+            
+            showVocabList(cat.title);
+        }
+
+        function showVocabList(topic) {
+            const container = document.getElementById('vocab-items-container');
+            document.getElementById('list-topic-title').innerText = topic;
+            container.innerHTML = state.rounds.map((item, idx) => `
+                <div class="glass-card p-5 rounded-2xl border-l-4 border-amber-500 flex justify-between items-center">
+                    <div>
+                        <div class="flex items-baseline gap-2">
+                            <h4 class="text-lg font-bold text-white">${item.word}</h4>
+                            <span class="text-xs text-slate-500">/ ${item.wordIndo}</span>
+                        </div>
+                        <p class="text-slate-300 text-sm mt-1 italic">"${item.sentence}"</p>
+                    </div>
+                    <button onclick="speak('${item.word.replace(/'/g, "\\'")}')" class="p-3 rounded-full bg-white/5 hover:bg-white/10 text-amber-500 flex-shrink-0">
+                        <i data-lucide="volume-2" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            `).join('');
+            lucide.createIcons();
+            switchView('view-vocab-list');
+        }
+
+        function startSpeakingSession() {
+            state.roundIndex = 0;
+            state.sessionScore = 0;
+            state.step = 'listenVocab';
+            switchView('view-game');
+            updateProgress();
+            renderStep();
+        }
+
+        function speak(text, callback) {
+            synth.cancel();
+            const utterance = new SpeechSynthesisUtterance(text);
+            if (state.britishVoice) utterance.voice = state.britishVoice;
+            utterance.rate = 0.85;
+            utterance.onend = () => { if (callback) callback(); };
+            synth.speak(utterance);
+        }
+
+        function renderStep() {
+            const currentItem = state.rounds[state.roundIndex];
+            const display = document.getElementById('target-display');
+            const stepLabel = document.getElementById('game-step-indicator');
+            const roundLabel = document.getElementById('round-indicator');
+            roundLabel.innerText = `Kosakata ${state.roundIndex + 1} dari ${state.rounds.length}`;
+
+            if (state.step === 'listenVocab') {
+                stepLabel.innerText = "Langkah 1: Dengarkan Vocab";
+                display.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-2 slide-in">
+                        <h2 class="text-5xl font-black text-white uppercase tracking-wide">${currentItem.word}</h2>
+                        <span class="text-slate-400 text-lg italic mt-2">/ ${currentItem.wordIndo}</span>
+                    </div>
+                `;
+                speak(currentItem.word, () => {
+                    setTimeout(() => {
+                        state.step = 'speakVocab';
+                        renderStep();
+                    }, 1000);
+                });
+            } else if (state.step === 'speakVocab') {
+                stepLabel.innerText = "Langkah 2: Tirukan Vocab";
+                state.currentTarget = currentItem.word;
+                display.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-2 slide-in">
+                        <div class="flex items-center gap-3">
+                            <h2 class="text-5xl font-black text-amber-400 uppercase tracking-wide">${currentItem.word}</h2>
+                            <button onclick="speak('${currentItem.word.replace(/'/g, "\\'")}')" class="p-3 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-all flex-shrink-0" title="Dengarkan Ulang">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <span class="text-slate-400 text-lg italic mt-2">/ ${currentItem.wordIndo}</span>
+                    </div>
+                `;
+            } else if (state.step === 'listenSentence') {
+                stepLabel.innerText = "Langkah 3: Dengarkan Kalimat";
+                display.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-2 slide-in">
+                        <span class="text-amber-500 font-black text-xl tracking-wide uppercase">${currentItem.word}</span>
+                        <h2 class="text-2xl md:text-3xl font-bold text-white text-center mt-4 px-4 leading-relaxed">"${currentItem.sentence}"</h2>
+                        <p class="text-slate-400 text-md mt-2 px-4 italic text-center">${currentItem.sentenceIndo}</p>
+                    </div>
+                `;
+                speak(currentItem.sentence, () => {
+                    setTimeout(() => {
+                        state.step = 'speakSentence';
+                        renderStep();
+                    }, 1000);
+                });
+            } else if (state.step === 'speakSentence') {
+                stepLabel.innerText = "Langkah 4: Tirukan Kalimat";
+                state.currentTarget = currentItem.sentence;
+                display.innerHTML = `
+                    <div class="flex flex-col items-center justify-center gap-2 slide-in">
+                        <span class="text-amber-500 font-black text-xl tracking-wide uppercase">${currentItem.word}</span>
+                        <div class="flex items-center justify-center gap-3 mt-4 px-4">
+                            <h2 class="text-2xl md:text-3xl font-black text-emerald-400 text-center leading-relaxed">"${currentItem.sentence}"</h2>
+                            <button onclick="speak('${currentItem.sentence.replace(/'/g, "\\'")}')" class="p-3 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 hover:bg-emerald-500/20 transition-all flex-shrink-0" title="Dengarkan Ulang">
+                                <i data-lucide="volume-2" class="w-5 h-5"></i>
+                            </button>
+                        </div>
+                        <p class="text-slate-400 text-md mt-2 px-4 italic text-center">${currentItem.sentenceIndo}</p>
+                    </div>
+                `;
+            }
+            updateMicUI();
+            lucide.createIcons();
+        }
+
+        // Toggle Manual/Mic mode
+        function setManualMode(enable) {
+            state.isManualMode = enable;
+            localStorage.setItem('speakup_manual_mode', enable);
+            updateMicUI();
+            showToast(enable ? "Mode Ketik Aktif!" : "Mode Mikrofon Aktif!", "bg-emerald-500");
+        }
+
+        // Memeriksa ketikan siswa di Mode Manual
+        function verifyTypedAnswer() {
+            const inputEl = document.getElementById('manual-text-input');
+            if (!inputEl) return;
+            const typedText = inputEl.value.toLowerCase().trim();
+            const target = state.currentTarget.toLowerCase().trim();
+            
+            const cleanT = typedText.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+            const cleanTarget = target.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()]/g,"");
+
+            if (cleanT === cleanTarget || cleanT.includes(cleanTarget) || cleanTarget.includes(cleanT)) {
+                handleSuccess();
+            } else {
+                showToast("Belum tepat, coba periksa ejaanmu!", "bg-rose-500");
+                const retryMsg = new SpeechSynthesisUtterance("Try again");
+                if (state.britishVoice) retryMsg.voice = state.britishVoice;
+                synth.speak(retryMsg);
+            }
+        }
+
+        function updateMicUI() {
+            const area = document.getElementById('mic-control-area');
+            const isSpeakingState = (state.step === 'speakVocab' || state.step === 'speakSentence');
+            
+            if (!isSpeakingState) { 
+                // Saat mode mendengarkan (listen)
+                area.innerHTML = `
+                    <div class="flex flex-col items-center gap-3">
+                        <div class="w-16 h-16 rounded-full bg-slate-800/80 flex items-center justify-center border border-white/10 animate-pulse">
+                            <i data-lucide="volume-2" class="w-8 h-8 text-amber-500"></i>
+                        </div>
+                        <p class="text-slate-400 text-sm font-bold uppercase tracking-widest">Dengarkan Pelafalan...</p>
+                    </div>
+                `;
+                return; 
+            }
+
+            if (state.isManualMode) {
+                // Tampilan input text manual (ketik) untuk mengatasi bug mic di Google Sites iframe
+                area.innerHTML = `
+                    <div class="w-full max-w-md bg-slate-900/80 p-5 rounded-2xl border border-white/10 shadow-lg slide-in">
+                        <label class="block text-xs font-bold text-amber-400 uppercase tracking-widest mb-2">Google Sites Manual Fallback Mode</label>
+                        <div class="flex gap-2">
+                            <input type="text" id="manual-text-input" 
+                                class="flex-1 bg-slate-950/80 border border-slate-700 rounded-xl px-4 py-3 text-white font-semibold focus:outline-none focus:border-amber-500" 
+                                placeholder="${state.step === 'speakVocab' ? 'Ketik kosakata di atas...' : 'Ketik kalimat lengkap di atas...'}"
+                                onkeydown="if(event.key === 'Enter') verifyTypedAnswer()">
+                            <button onclick="verifyTypedAnswer()" class="px-5 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl transition-all btn-active flex items-center justify-center gap-1">
+                                Kirim <i data-lucide="send" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                        <button onclick="setManualMode(false)" class="text-xs text-slate-400 hover:text-white mt-3 underline block mx-auto">
+                            Gunakan Mikrofon Kembali
+                        </button>
+                    </div>
+                `;
+            } else {
+                // Tampilan mikrofon orisinil
+                area.innerHTML = `
+                    <button onclick="toggleListening()" class="w-24 h-24 rounded-full flex items-center justify-center transition-all ${state.isListening ? 'listening-animation' : 'bg-amber-500 hover:bg-amber-400'} shadow-xl btn-active">
+                        <i data-lucide="${state.isListening ? 'square' : 'mic'}" class="w-10 h-10 text-white"></i>
+                    </button>
+                    <p class="text-slate-400 text-sm font-bold uppercase tracking-widest mt-2">${state.isListening ? 'Mendengarkan...' : 'Sentuh & Bicara'}</p>
+                    
+                    <button onclick="setManualMode(true)" class="text-xs text-slate-500 hover:text-slate-300 mt-1 underline">
+                        Mic tidak berfungsi? Gunakan Mode Ketik
+                    </button>
+                `;
+            }
+            lucide.createIcons();
+        }
+
+        function toggleListening() {
+            if (!recognition) {
+                showToast("Mikrofon diblokir! Mengaktifkan Mode Ketik...", "bg-amber-500");
+                setManualMode(true);
+                return;
+            }
+            state.isListening ? recognition.stop() : recognition.start();
+        }
+
+        // Penanganan error jika mikrofon diblokir oleh browser / iframe Google Sites
+        if (recognition) {
+            recognition.onerror = (event) => {
+                state.isListening = false;
+                updateMicUI();
+                if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+                    showToast("Mic terblokir oleh Google Sites! Mengaktifkan Mode Ketik...", "bg-amber-500");
+                    setTimeout(() => setManualMode(true), 1500);
+                } else {
+                    showToast(`Mikrofon error: ${event.error}`, "bg-rose-500");
+                }
+            };
+        }
+
+        function handleSuccess() {
+            // Pilih pujian acak
+            const praises = ["Good job!", "Amazing!", "Excellent!"];
+            const randomPraise = praises[Math.floor(Math.random() * praises.length)];
+            
+            showToast(randomPraise, "bg-emerald-500");
+            
+            // Suarakan pujian
+            const praiseMsg = new SpeechSynthesisUtterance(randomPraise);
+            if (state.britishVoice) praiseMsg.voice = state.britishVoice;
+            synth.speak(praiseMsg);
+
+            if (state.step === 'speakVocab') {
+                // Selesai dengan kosakata, lanjut ke mendengarkan kalimat lengkap
+                state.step = 'listenSentence';
+                setTimeout(renderStep, 1500);
+            } else if (state.step === 'speakSentence') {
+                // Selesai dengan kalimat utuh, lanjut ke kosakata berikutnya
+                state.sessionScore += 10;
+                state.totalXP += 10;
+                localStorage.setItem('speakup_xp', state.totalXP);
+                document.getElementById('global-score').innerText = state.totalXP;
+                
+                if (state.roundIndex < state.rounds.length - 1) {
+                    state.roundIndex++;
+                    state.step = 'listenVocab';
+                    updateProgress();
+                    setTimeout(renderStep, 1500); // Berikan jeda agar suara pujian selesai terdengar
+                } else {
+                    // SELESAI 1 KATEGORI (10 SOAL) -> Langsung kembali ke Beranda tanpa pop-up rekap per kategori!
+                    setTimeout(finishCategoryDirectly, 1000);
+                }
+            }
+        }
+
+        function updateProgress() {
+            document.getElementById('progress-bar').style.width = ((state.roundIndex / state.rounds.length) * 100) + '%';
+        }
+
+        // ALUR REVISI: Selesai kategori langsung balik ke home secara senyap
+        function finishCategoryDirectly() {
+            showToast(`Kategori ${state.currentGame.title} Selesai! (+${state.sessionScore} XP)`, "bg-emerald-500");
+
+            // Masukkan judul kategori yang selesai ke daftar rekapitulasi sesi ini
+            if (!state.completedList.includes(state.currentGame.title)) {
+                state.completedList.push(state.currentGame.title);
+                localStorage.setItem('speakup_session_completed_titles', JSON.stringify(state.completedList));
+            }
+
+            // Tandai kategori ini selesai secara permanen
+            if (!state.completedCategories.includes(state.currentGame.id)) {
+                state.completedCategories.push(state.currentGame.id);
+                localStorage.setItem('speakup_completed', JSON.stringify(state.completedCategories));
+            }
+
+            // MODIFIKASI LOGIKA PEMBUKAAN KATEGORI BARU (STEP-BY-STEP DI DALAM KELASNYA)
+            const grade = detectGradeLevel(state.userClass);
+            let classCategoryPool = [];
+
+            if (grade === 10) {
+                classCategoryPool = ['unit1', 'unit2', 'unit3', 'unit4', 'unit5', 'unit6'];
+            } else if (grade === 11) {
+                classCategoryPool = ['unit7', 'unit8', 'unit9', 'unit10', 'unit11'];
+            } else if (grade === 12) {
+                classCategoryPool = ['unit12', 'unit13', 'unit14', 'unit15'];
+            }
+
+            // Cari kategori dalam kelompok kelas yang saat ini masih terkunci
+            const lockedCategoriesInClass = categories.filter(c => classCategoryPool.includes(c.id) && !state.unlockedCategoryIds.includes(c.id));
+            
+            if (lockedCategoriesInClass.length > 0) {
+                // Pilih satu unit baru secara acak dari kelompok kelasnya untuk dibuka gemboknya
+                const randomIndex = Math.floor(Math.random() * lockedCategoriesInClass.length);
+                const newlyUnlocked = lockedCategoriesInClass[randomIndex];
+                
+                state.unlockedCategoryIds.push(newlyUnlocked.id);
+                localStorage.setItem('speakup_unlocked_ids', JSON.stringify(state.unlockedCategoryIds));
+                showToast(`Kategori Baru Kelas Anda Terbuka: ${newlyUnlocked.title}!`, "bg-indigo-500");
+            }
+
+            // Kembali ke beranda
+            renderGrid();
+            switchView('view-home');
+        }
+
+        // FUNGSI BARU: Kirim data rekapitulasi tunggal di akhir 15 menit ke Google Sheets
+        function saveToGoogleSheets() {
+            // PERHATIAN: Ganti teks di bawah dengan URL Web App dari Google Sheets milikmu!
+            const scriptURL = 'https://script.google.com/macros/s/AKfycbwcfg-o84lfHaZVRBRYV-1PtHDp4YFA2QrJPRl0zqETbtQOxOrZesierCXLeS_goH4aOw/exec'; 
+            
+            if (scriptURL === 'YOUR_GOOGLE_SCRIPT_WEB_APP_URL') {
+                console.log('Pengiriman ke Sheets dilewati: URL Script belum diisi.');
+                return;
+            }
+
+            // Gabungkan semua kategori yang berhasil diselesaikan menjadi satu string rekap (misal: "Unit 1, Unit 2")
+            const completedCategoriesSummary = state.completedList.length > 0 ? state.completedList.join(', ') : 'Belum menyelesaikan kategori';
+
+            const formData = new FormData();
+            formData.append('nama', state.userName);
+            formData.append('kelas', state.userClass);
+            formData.append('kategori', completedCategoriesSummary); // Mengirim seluruh rekap kategori
+            formData.append('score_sesi', 'Rekap Akhir Sesi'); // Menjelaskan bahwa ini rekap global
+            formData.append('total_xp', state.totalXP); // Total akumulasi XP yang diraih selama 15 menit
+
+            fetch(scriptURL, { 
+                method: 'POST', 
+                body: formData,
+                mode: 'no-cors' // Tambahan wajib untuk Google Apps Script
+            })
+                .then(response => console.log('Data REKAP AKHIR berhasil direkam ke Sheets!'))
+                .catch(error => console.error('Gagal mengirim data rekap:', error.message));
+        }
+
+        function showToast(msg, colorClass) {
+            const t = document.getElementById('feedback-toast');
+            t.innerText = msg;
+            t.className = `fixed bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 rounded-full font-bold text-white shadow-2xl transition-all duration-300 z-[100] ${colorClass}`;
+            t.style.opacity = "1";
+            setTimeout(() => t.style.opacity = "0", 2500);
+        }
+
+        function switchView(id) {
+            ['view-welcome', 'view-home', 'view-vocab-list', 'view-game', 'view-results'].forEach(v => {
+                const el = document.getElementById(v);
+                if (el) el.classList.add('hidden');
+            });
+            document.getElementById(id).classList.remove('hidden');
+            
+            const navControls = document.getElementById('nav-controls');
+            if (id === 'view-welcome') {
+                navControls.classList.add('hidden');
+            } else {
+                navControls.classList.remove('hidden');
+                document.getElementById('home-btn').classList.toggle('hidden', id === 'view-home');
+            }
+            window.scrollTo(0,0);
+        }
+
+        function goHome() {
+            synth.cancel();
+            if(recognition) recognition.stop();
+            if (!state.userName) {
+                switchView('view-welcome');
+            } else {
+                switchView('view-home');
+            }
+        }
+
+        window.onload = () => {
+            renderGrid();
+            const setVoice = () => {
+                const voices = synth.getVoices();
+                state.britishVoice = voices.find(v => v.name.includes('Google UK English')) || voices.find(v => v.lang === 'en-GB') || voices[0];
+            };
+            setVoice();
+            if (synth.onvoiceschanged !== undefined) synth.onvoiceschanged = setVoice;
+            document.getElementById('global-score').innerText = state.totalXP;
+            lucide.createIcons();
+
+            if (state.userName && state.userClass) {
+                updateProfileUI();
+                
+                // Set judul tingkatan kelas di beranda saat reload
+                const grade = detectGradeLevel(state.userClass);
+                document.getElementById('home-grade-title').innerText = `Kategori Belajar Kelas ${grade === 10 ? 'X' : grade === 11 ? 'XI' : 'XII'}`;
+
+                // Cek apakah timer sudah habis jika user merefresh browser
+                const endTimeStr = localStorage.getItem('speakup_timer_end');
+                if (endTimeStr && Date.now() >= parseInt(endTimeStr)) {
+                    handleGlobalTimeUp();
+                } else {
+                    startGlobalTimer();
+                    switchView('view-home');
+                }
+            } else {
+                switchView('view-welcome');
+            }
+        };
+    </script>
+</body>
+</html>
